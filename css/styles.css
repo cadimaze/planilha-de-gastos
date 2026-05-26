@@ -1,0 +1,69 @@
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+
+/* Nav active state */
+.nav-btn.active {
+  background-color: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+}
+.nav-btn.active svg { color: #4338ca; }
+
+.mobile-nav-btn.active { color: #4f46e5; }
+
+/* Page enter animation */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#page-content > * { animation: pageIn 0.18s ease-out both; }
+
+/* Modal slide-up on mobile */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@media (max-width: 1023px) {
+  #modal-box { animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1); }
+}
+
+/* Safe area for iOS notch */
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Input autofill fix */
+input:-webkit-autofill { -webkit-box-shadow: 0 0 0 40px white inset; }
+
+/* Number input arrows hidden */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* Date input */
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+
+/* Radio card */
+.radio-card { transition: border-color 0.15s, background-color 0.15s; }
+.radio-card.selected { border-color: #6366f1; background-color: #f5f3ff; }
+
+/* Balance bar animation */
+.balance-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Card hover */
+.card-hover { transition: box-shadow 0.15s, transform 0.15s; }
+.card-hover:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+
+/* Confirm delete button */
+.btn-danger { transition: background-color 0.15s; }
+
+canvas { display: block; }
