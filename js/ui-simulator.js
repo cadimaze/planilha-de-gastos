@@ -2,7 +2,8 @@ const UISimulator = {
   render() {
     const planned  = Storage.getPlanned();
     const tx       = Storage.getTransactions();
-    const projs    = Calc.projections(tx, planned, 6);
+    const recAll   = Storage.getRecurrentes();
+    const projs    = Calc.projections(tx, planned, 6, recAll);
     const hasAny   = planned.length > 0;
 
     document.getElementById('page-content').innerHTML = `
@@ -79,6 +80,13 @@ const UISimulator = {
                     Início: ${Calc.fmtDate(p.startDate)}
                     ${endDate ? ` · Fim: ${endDate}` : ''}
                   </p>
+                  <button onclick="UISimulator.confirmAsTransactions('${p.id}')"
+                    class="mt-1.5 flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Lançar nas transações
+                  </button>
                 </div>
                 <button onclick="UISimulator.confirmDelete('${p.id}')"
                   class="p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
@@ -396,5 +404,98 @@ const UISimulator = {
       try { await Storage.deletePlanned(id); }
       catch (e) { alert('Erro ao excluir. Tente novamente.'); }
     });
+  },
+
+  // ── Converter simulação em transações reais ───────────────────────────────
+  confirmAsTransactions(id) {
+    const p = Storage.getPlanned().find(x => x.id === id);
+    if (!p) return;
+    const impacts = Calc.plannedImpacts(p);
+
+    document.getElementById('modal-box').innerHTML = `
+      <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+        <h3 class="text-base font-bold text-gray-900">Lançar nas Transações</h3>
+        <button onclick="Modal.close()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-4 pb-6 pt-4 space-y-4">
+        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3">
+          <p class="text-sm font-semibold text-indigo-900">${p.description}</p>
+          <p class="text-xs text-indigo-600 mt-0.5">${impacts.length === 1 ? 'Lançamento único' : `${impacts.length} parcelas`} · ${Calc.fmt(p.totalAmount)}</p>
+        </div>
+        <div class="space-y-1.5 max-h-40 overflow-y-auto">
+          ${impacts.map(imp => `
+            <div class="flex justify-between text-xs px-3 py-1.5 bg-gray-50 rounded-lg">
+              <span class="text-gray-600">${Calc.fmtMonthLong(imp.monthKey)}${imp.installment ? ` (${imp.installment}/${imp.totalInstallments})` : ''}</span>
+              <span class="font-semibold text-red-600">−${Calc.fmt(imp.amount)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Categoria *</label>
+          <select id="confirm-cat"
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+            <option value="">Selecionar categoria...</option>
+            ${UITransactions.EXPENSE_CATS.map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <label class="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" id="remove-planned" checked class="w-4 h-4 accent-indigo-600 rounded">
+          <span class="text-sm text-gray-700">Remover da simulação após confirmar</span>
+        </label>
+        <div class="flex gap-3 pt-1">
+          <button type="button" onclick="Modal.close()"
+            class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button type="button" id="confirm-exec-btn" onclick="UISimulator.executeConfirm('${id}')"
+            class="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    `;
+    Modal.open();
+  },
+
+  async executeConfirm(id) {
+    const p = Storage.getPlanned().find(x => x.id === id);
+    if (!p) { Modal.close(); return; }
+    const cat = document.getElementById('confirm-cat')?.value;
+    if (!cat) { alert('Selecione uma categoria.'); return; }
+
+    const impacts  = Calc.plannedImpacts(p);
+    const groupId  = impacts.length > 1 ? _genId() : null;
+    const startDay = new Date(p.startDate + 'T12:00:00').getDate();
+
+    const transactions = impacts.map(imp => {
+      const [y, m] = imp.monthKey.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      const day = String(Math.min(startDay, lastDay)).padStart(2, '0');
+      return {
+        type:        'expense',
+        description: imp.installment ? `${p.description} (${imp.installment}/${imp.totalInstallments})` : p.description,
+        amount:      imp.amount,
+        date:        `${imp.monthKey}-${day}`,
+        category:    cat,
+        notes:       '',
+        ...(groupId ? { groupId, installmentNumber: imp.installment, totalInstallments: imp.totalInstallments } : {}),
+      };
+    });
+
+    const removePlanned = document.getElementById('remove-planned')?.checked;
+    const btn = document.getElementById('confirm-exec-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+    try {
+      await Storage.addTransactionBatch(transactions);
+      if (removePlanned) await Storage.deletePlanned(id);
+      Modal.close();
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao salvar. Tente novamente.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar'; }
+    }
   },
 };

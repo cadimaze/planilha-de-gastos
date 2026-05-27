@@ -2,21 +2,26 @@ const UITransactions = {
   filter: 'all',
   search: '',
 
-  INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Outros'],
-  EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Outros'],
+  INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Vale Alimentação', 'Vale Refeição', 'Outros'],
+  EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
 
   // ── Lista ─────────────────────────────────────────────────────────────────
   render(monthKey) {
-    const txAll = Storage.getTransactions();
-    let tx = Calc.txForMonth(txAll, monthKey).sort((a, b) => b.date.localeCompare(a.date));
+    const txAll  = Storage.getTransactions();
+    const recAll = Storage.getRecurrentes();
+    const recTx  = Calc.recurrentForMonth(recAll, monthKey);
+
+    let tx = [...Calc.txForMonth(txAll, monthKey), ...recTx]
+      .sort((a, b) => b.date.localeCompare(a.date));
     if (this.filter !== 'all') tx = tx.filter(t => t.type === this.filter);
     if (this.search) {
       const q = this.search.toLowerCase();
       tx = tx.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
     }
-    const all      = Calc.txForMonth(txAll, monthKey);
-    const incCount = all.filter(t => t.type === 'income').length;
-    const expCount = all.filter(t => t.type === 'expense').length;
+    const allReal  = Calc.txForMonth(txAll, monthKey);
+    const allMerge = [...allReal, ...recTx];
+    const incCount = allMerge.filter(t => t.type === 'income').length;
+    const expCount = allMerge.filter(t => t.type === 'expense').length;
 
     document.getElementById('page-content').innerHTML = `
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 mb-4 space-y-3">
@@ -27,13 +32,13 @@ const UITransactions = {
             class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="flex gap-2">
-          <button onclick="UITransactions.setFilter('all')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Todos (${all.length})</button>
+          <button onclick="UITransactions.setFilter('all')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Todos (${allMerge.length})</button>
           <button onclick="UITransactions.setFilter('income')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='income' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Entradas (${incCount})</button>
           <button onclick="UITransactions.setFilter('expense')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='expense' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Saídas (${expCount})</button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="grid grid-cols-2 gap-3 mb-3">
         <button onclick="UITransactions.openForm('income')" class="flex items-center justify-center gap-2 bg-green-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-green-700 active:scale-95 transition-all shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg> Entrada
         </button>
@@ -41,6 +46,23 @@ const UITransactions = {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg> Saída
         </button>
       </div>
+      <button onclick="UITransactions.manageRecurrents()"
+        class="w-full mb-4 flex items-center justify-between px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </div>
+          <div class="text-left">
+            <p class="text-xs font-semibold text-gray-700">Lançamentos recorrentes</p>
+            <p class="text-xs text-gray-400">${recAll.filter(r=>r.active!==false).length} ativo${recAll.filter(r=>r.active!==false).length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
 
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         ${tx.length === 0 ? `
@@ -56,16 +78,22 @@ const UITransactions = {
               const instBadge = t.installmentNumber
                 ? `<span class="text-xs bg-purple-100 text-purple-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">${t.installmentNumber}/${t.totalInstallments}</span>`
                 : '';
+              const recBadge = t.isRecurrent
+                ? `<span class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-md ml-1">↻</span>`
+                : '';
+              const clickHandler = t.isRecurrent
+                ? `UITransactions.openRecurrentForm('${t.recurrentId}')`
+                : `UITransactions.openForm('${t.type}', '${t.id}')`;
               return `
               <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
-                   onclick="UITransactions.openForm('${t.type}', '${t.id}')">
+                   onclick="${clickHandler}">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type==='income' ? 'bg-green-50' : 'bg-red-50'}">
                   ${categoryIcon(t.category, t.type)}
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
                   <div class="flex items-center gap-1 flex-wrap">
                     <p class="text-sm font-medium text-gray-900 truncate">${t.description}</p>
-                    ${instBadge}
+                    ${instBadge}${recBadge}
                   </div>
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                   ${t.notes ? `<p class="text-xs text-gray-300 truncate">${t.notes}</p>` : ''}
@@ -471,6 +499,229 @@ const UITransactions = {
     Modal.close();
     try { await Storage.deleteTransactionGroup(groupId); }
     catch (e) { alert('Erro ao excluir parcelas.'); }
+  },
+
+  // ── Recorrentes: lista ────────────────────────────────────────────────────
+  manageRecurrents() {
+    const recAll = Storage.getRecurrentes();
+    document.getElementById('modal-box').innerHTML = `
+      <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-gray-900">Lançamentos Recorrentes</h3>
+        </div>
+        <button onclick="Modal.close()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-4 pt-3 pb-4">
+        <button onclick="UITransactions.openRecurrentForm()"
+          class="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-indigo-700 mb-3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Novo recorrente
+        </button>
+        ${recAll.length === 0 ? `
+          <div class="py-8 text-center">
+            <p class="text-sm text-gray-400">Nenhum lançamento recorrente</p>
+            <p class="text-xs text-gray-300 mt-1">Adicione entradas e saídas fixas do mês</p>
+          </div>
+        ` : `
+          <div class="space-y-2 max-h-80 overflow-y-auto">
+            ${recAll.map(r => `
+              <button onclick="UITransactions.openRecurrentForm('${r.id}')"
+                class="w-full flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 text-left transition-colors ${r.active === false ? 'opacity-50' : ''}">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${r.type === 'income' ? 'bg-green-50' : 'bg-red-50'}">
+                  ${categoryIcon(r.category, r.type, true)}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900 truncate">${r.description}</p>
+                  <p class="text-xs text-gray-400">${r.category} · dia ${r.day || 1}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-sm font-bold ${r.type === 'income' ? 'text-green-600' : 'text-red-600'}">${r.type === 'income' ? '+' : '−'}${Calc.fmt(r.amount)}</p>
+                  <p class="text-xs ${r.active === false ? 'text-gray-300' : 'text-indigo-500'}">${r.active === false ? 'Inativo' : 'Ativo'}</p>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+    Modal.open();
+  },
+
+  // ── Recorrentes: formulário ───────────────────────────────────────────────
+  openRecurrentForm(id) {
+    const rec  = id ? Storage.getRecurrentes().find(r => r.id === id) : null;
+    const type = rec?.type || 'expense';
+    const cats = type === 'income' ? this.INCOME_CATS : this.EXPENSE_CATS;
+    const curMonth = new Date().toISOString().slice(0, 7);
+
+    document.getElementById('modal-box').innerHTML = `
+      <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <button onclick="UITransactions.manageRecurrents()"
+            class="w-7 h-7 flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <h3 class="text-base font-bold text-gray-900">${rec ? 'Editar' : 'Novo'} Recorrente</h3>
+        </div>
+        <button onclick="Modal.close()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-4 pb-6 pt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Tipo *</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="rec-btn-income" onclick="UITransactions._setRecType('income')"
+              class="py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors ${type === 'income' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}">
+              Entrada
+            </button>
+            <button type="button" id="rec-btn-expense" onclick="UITransactions._setRecType('expense')"
+              class="py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors ${type === 'expense' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}">
+              Saída
+            </button>
+          </div>
+          <input type="hidden" id="rec-type" value="${type}">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Descrição *</label>
+          <input id="rec-desc" type="text" autocomplete="off"
+            placeholder="Ex: Aluguel, Salário, Netflix..."
+            value="${rec?.description || ''}"
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Valor *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+              <input id="rec-amount" type="number" min="0.01" step="0.01" placeholder="0,00"
+                value="${rec?.amount || ''}"
+                class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Dia do mês *</label>
+            <input id="rec-day" type="number" min="1" max="28" placeholder="Ex: 5"
+              value="${rec?.day || ''}"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Categoria *</label>
+          <select id="rec-category"
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+            <option value="">Selecionar categoria...</option>
+            ${cats.map(c => `<option value="${c}" ${rec?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Início (mês/ano)</label>
+          <input id="rec-start" type="month" value="${rec?.startDate || curMonth}"
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-xs text-gray-400 mt-1">A partir de qual mês este recorrente entra em vigor.</p>
+        </div>
+        ${rec ? `
+        <label class="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl">
+          <input type="checkbox" id="rec-active" ${rec.active !== false ? 'checked' : ''}
+            class="w-4 h-4 accent-indigo-600 cursor-pointer rounded">
+          <div>
+            <p class="text-sm font-semibold text-gray-700">Recorrente ativo</p>
+            <p class="text-xs text-gray-400">Desmarque para pausar sem excluir</p>
+          </div>
+        </label>
+        ` : ''}
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Observações</label>
+          <textarea id="rec-notes" rows="2" placeholder="Opcional..."
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${rec?.notes || ''}</textarea>
+        </div>
+        <div class="flex gap-3 pt-1">
+          <button type="button" onclick="UITransactions.manageRecurrents()"
+            class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button type="button" id="rec-submit-btn" onclick="UITransactions.submitRecurrent('${id || ''}')"
+            class="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50">
+            ${rec ? 'Salvar' : 'Criar'}
+          </button>
+        </div>
+        ${rec ? `
+        <button type="button" onclick="UITransactions.deleteRecurrent('${id}')"
+          class="w-full py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors font-medium">
+          Excluir recorrente
+        </button>` : ''}
+      </div>
+    `;
+    Modal.open();
+  },
+
+  _setRecType(type) {
+    document.getElementById('rec-type').value = type;
+    const incBtn = document.getElementById('rec-btn-income');
+    const expBtn = document.getElementById('rec-btn-expense');
+    const base   = 'py-2.5 rounded-xl text-sm font-semibold border-2 transition-colors';
+    if (type === 'income') {
+      if (incBtn) incBtn.className = `${base} border-green-500 bg-green-50 text-green-700`;
+      if (expBtn) expBtn.className = `${base} border-gray-200 text-gray-600 bg-white hover:bg-gray-50`;
+    } else {
+      if (expBtn) expBtn.className = `${base} border-red-500 bg-red-50 text-red-700`;
+      if (incBtn) incBtn.className = `${base} border-gray-200 text-gray-600 bg-white hover:bg-gray-50`;
+    }
+    const cats = type === 'income' ? this.INCOME_CATS : this.EXPENSE_CATS;
+    const sel  = document.getElementById('rec-category');
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Selecionar categoria...</option>' +
+        cats.map(c => `<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
+    }
+  },
+
+  async submitRecurrent(id) {
+    const type   = document.getElementById('rec-type')?.value;
+    const desc   = document.getElementById('rec-desc')?.value?.trim();
+    const amount = parseFloat(document.getElementById('rec-amount')?.value);
+    const day    = parseInt(document.getElementById('rec-day')?.value);
+    const cat    = document.getElementById('rec-category')?.value;
+    const start  = document.getElementById('rec-start')?.value || null;
+    const notes  = document.getElementById('rec-notes')?.value?.trim() || '';
+    const activeEl = document.getElementById('rec-active');
+    const active = activeEl ? activeEl.checked : true;
+
+    if (!desc)                       { alert('Informe a descrição.'); return; }
+    if (!amount || amount <= 0)      { alert('Informe um valor válido.'); return; }
+    if (!day || day < 1 || day > 28) { alert('Informe o dia do mês (1 a 28).'); return; }
+    if (!cat)                        { alert('Selecione a categoria.'); return; }
+
+    const data = { type, description: desc, amount, day, category: cat, notes, active, startDate: start };
+    const btn  = document.getElementById('rec-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+    try {
+      if (id) await Storage.updateRecurrent(id, data);
+      else    await Storage.addRecurrent(data);
+      UITransactions.manageRecurrents();
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao salvar. Verifique sua conexão.');
+      if (btn) { btn.disabled = false; btn.textContent = id ? 'Salvar' : 'Criar'; }
+    }
+  },
+
+  deleteRecurrent(id) {
+    Confirm.show('Este lançamento recorrente será removido permanentemente.', async () => {
+      try {
+        await Storage.deleteRecurrent(id);
+        Modal.close();
+      } catch (e) {
+        alert('Erro ao excluir.');
+      }
+    });
   },
 };
 

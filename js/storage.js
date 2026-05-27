@@ -47,6 +47,22 @@ const Storage = {
     return this._plRef().doc(id).delete();
   },
 
+  // ── Recorrentes ───────────────────────────────────────────────────────────
+  _recRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('recorrentes'); },
+  getRecurrentes() { return (typeof App !== 'undefined' && App.recorrentes) || []; },
+
+  async addRecurrent(data) {
+    return this._recRef().add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  },
+
+  async updateRecurrent(id, data) {
+    return this._recRef().doc(id).update(data);
+  },
+
+  async deleteRecurrent(id) {
+    return this._recRef().doc(id).delete();
+  },
+
   // ── Planilhas ─────────────────────────────────────────────────────────────
   async getUserPlanilhas() {
     const snap = await db.collection('planilhas')

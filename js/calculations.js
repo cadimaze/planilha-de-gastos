@@ -1,4 +1,7 @@
 const Calc = {
+  // Categories that belong to separate wallets (not bank balance)
+  VA_VR_CATS: ['Vale Alimentação', 'Vale Refeição', 'Alimentação (VA)', 'Refeição (VR)'],
+
   fmt(value) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
   },
@@ -30,16 +33,69 @@ const Calc = {
     return transactions.filter(t => this.monthKey(t.date) === key);
   },
 
-  summary(transactions, key) {
-    const tx = this.txForMonth(transactions, key);
+  // Generates virtual transaction objects for active recurrents in a given month
+  recurrentForMonth(recorrentes, key) {
+    if (!recorrentes || !recorrentes.length) return [];
+    const [y, m] = key.split('-').map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    return recorrentes
+      .filter(r => r.active !== false && (!r.startDate || r.startDate <= key))
+      .map(r => ({
+        id:           `rec_${r.id}`,
+        type:         r.type,
+        description:  r.description,
+        amount:       r.amount,
+        category:     r.category,
+        notes:        r.notes || '',
+        date:         `${key}-${String(Math.min(r.day || 1, lastDay)).padStart(2, '0')}`,
+        isRecurrent:  true,
+        recurrentId:  r.id,
+      }));
+  },
+
+  // Full summary including recurrents (all wallets)
+  summary(transactions, key, recorrentes = []) {
+    const tx = [
+      ...this.txForMonth(transactions, key),
+      ...this.recurrentForMonth(recorrentes, key),
+    ];
     const income   = tx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expenses = tx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     return { income, expenses, balance: income - expenses, tx, count: tx.length };
   },
 
-  categoryTotals(transactions, key, type) {
+  // Bank-only summary — excludes VA/VR categories
+  bankSummary(transactions, key, recorrentes = []) {
+    const s = this.summary(transactions, key, recorrentes);
+    const tx = s.tx.filter(t => !this.VA_VR_CATS.includes(t.category));
+    const income   = tx.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const expenses = tx.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    return { income, expenses, balance: income - expenses, tx, count: tx.length };
+  },
+
+  // VA and VR wallet balances
+  walletSummary(transactions, key, recorrentes = []) {
+    const allTx = [
+      ...this.txForMonth(transactions, key),
+      ...this.recurrentForMonth(recorrentes, key),
+    ];
+    const wallet = (inCats, outCats) => {
+      const inc = allTx.filter(t => inCats.includes(t.category)).reduce((s, t) => s + t.amount, 0);
+      const exp = allTx.filter(t => outCats.includes(t.category)).reduce((s, t) => s + t.amount, 0);
+      return { income: inc, expenses: exp, balance: inc - exp, has: inc > 0 || exp > 0 };
+    };
+    return {
+      va: wallet(['Vale Alimentação'], ['Alimentação (VA)']),
+      vr: wallet(['Vale Refeição'],    ['Refeição (VR)']),
+    };
+  },
+
+  categoryTotals(transactions, key, type, recorrentes = []) {
     const map = {};
-    this.txForMonth(transactions, key)
+    [
+      ...this.txForMonth(transactions, key),
+      ...this.recurrentForMonth(recorrentes, key),
+    ]
       .filter(t => t.type === type)
       .forEach(t => { map[t.category] = (map[t.category] || 0) + t.amount; });
     return Object.entries(map)
@@ -77,7 +133,6 @@ const Calc = {
     return result;
   },
 
-  // Map of monthKey -> array of { amount, installment, totalInstallments, planned }
   plannedByMonth(plannedList) {
     const map = {};
     plannedList.forEach(p => {
@@ -89,14 +144,14 @@ const Calc = {
     return map;
   },
 
-  // Projections for the next `months` months from today
-  projections(transactions, plannedList, months = 6) {
+  // Projections use bank-only balance (VA/VR excluded) + recurrents
+  projections(transactions, plannedList, months = 6, recorrentes = []) {
     const now = new Date();
     const byMonth = this.plannedByMonth(plannedList);
     return Array.from({ length: months }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const s = this.summary(transactions, key);
+      const s = this.bankSummary(transactions, key, recorrentes);
       const impacts = byMonth[key] || [];
       const plannedTotal = impacts.reduce((a, x) => a + x.amount, 0);
       return { monthKey: key, ...s, impacts, plannedTotal, projected: s.balance - plannedTotal };

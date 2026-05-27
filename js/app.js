@@ -7,11 +7,13 @@ const App = {
   planilhas:         [],
   transactions:      [],
   planned:           [],
+  recorrentes:       [],
 
   _initialized: false,
   _loadCount:   0,
   _unsubTx:     null,
   _unsubPl:     null,
+  _unsubRec:    null,
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   init() {
@@ -67,8 +69,9 @@ const App = {
   },
 
   switchPlanilha(planilhaId) {
-    if (this._unsubTx) { this._unsubTx(); this._unsubTx = null; }
-    if (this._unsubPl) { this._unsubPl(); this._unsubPl = null; }
+    if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
+    if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
+    if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
 
     this.currentPlanilhaId = planilhaId;
     this.currentPlanilha   = this.planilhas.find(p => p.id === planilhaId) || null;
@@ -81,7 +84,7 @@ const App = {
 
     const onLoad = () => {
       this._loadCount++;
-      if (this._loadCount >= 2 && !this._initialized) {
+      if (this._loadCount >= 3 && !this._initialized) {
         this._initialized = true;
         this._showApp();
       }
@@ -92,14 +95,14 @@ const App = {
         this.transactions = snap.docs.map(doc => {
           const d = doc.data();
           return {
-            id:               doc.id,
-            type:             d.type,
-            description:      d.description,
-            amount:           d.amount,
-            date:             d.date,
-            category:         d.category,
-            notes:            d.notes || '',
-            groupId:          d.groupId          || null,
+            id:                doc.id,
+            type:              d.type,
+            description:       d.description,
+            amount:            d.amount,
+            date:              d.date,
+            category:          d.category,
+            notes:             d.notes || '',
+            groupId:           d.groupId           || null,
             installmentNumber: d.installmentNumber || null,
             totalInstallments: d.totalInstallments || null,
           };
@@ -113,18 +116,38 @@ const App = {
         this.planned = snap.docs.map(doc => {
           const d = doc.data();
           return {
-            id:                doc.id,
-            description:       d.description,
-            totalAmount:       d.totalAmount,
-            paymentType:       d.paymentType,
-            installments:      d.installments,
+            id:                 doc.id,
+            description:        d.description,
+            totalAmount:        d.totalAmount,
+            paymentType:        d.paymentType,
+            installments:       d.installments,
             installmentAmounts: d.installmentAmounts || null,
-            startDate:         d.startDate,
+            startDate:          d.startDate,
           };
         });
         if (!this._initialized) onLoad();
         else if (['dashboard', 'simulator'].includes(this.currentPage)) this.refresh();
       }, err => console.error('planned snapshot:', err));
+
+    this._unsubRec = db.collection('planilhas').doc(planilhaId)
+      .collection('recorrentes').onSnapshot(snap => {
+        this.recorrentes = snap.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id:          doc.id,
+            type:        d.type,
+            description: d.description,
+            amount:      d.amount,
+            category:    d.category,
+            day:         d.day || 1,
+            notes:       d.notes || '',
+            active:      d.active !== false,
+            startDate:   d.startDate || null,
+          };
+        });
+        if (!this._initialized) onLoad();
+        else this.refresh();
+      }, err => console.error('recorrentes snapshot:', err));
   },
 
   _showApp() {
@@ -139,9 +162,10 @@ const App = {
   },
 
   _onLogout() {
-    if (this._unsubTx) { this._unsubTx(); this._unsubTx = null; }
-    if (this._unsubPl) { this._unsubPl(); this._unsubPl = null; }
-    this.transactions = []; this.planned = []; this.planilhas = [];
+    if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
+    if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
+    if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
+    this.transactions = []; this.planned = []; this.recorrentes = []; this.planilhas = [];
     this.currentPlanilha = null; this.currentPlanilhaId = null;
     this._initialized = false; this._loadCount = 0;
     const loading = document.getElementById('loading');

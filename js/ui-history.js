@@ -1,6 +1,7 @@
 const UIHistory = {
   render() {
     const tx        = Storage.getTransactions();
+    const recAll    = Storage.getRecurrentes();
     const allMonths = Calc.allMonths(tx);
     const last6     = [...allMonths].sort().slice(-6);
 
@@ -20,7 +21,7 @@ const UIHistory = {
       ${allMonths.length > 0 ? (() => {
         let running = 0;
         const rows = [...allMonths].sort().map(key => {
-          const s = Calc.summary(tx, key);
+          const s = Calc.summary(tx, key, recAll);
           running += s.balance;
           return { key, s, running };
         }).reverse();
@@ -48,10 +49,10 @@ const UIHistory = {
             <p class="text-xs text-gray-300 mt-1">Adicione transações para construir seu histórico</p>
           </div>
         ` : allMonths.map(key => {
-          const s = Calc.summary(tx, key);
+          const s = Calc.summary(tx, key, recAll);
           const balColor = s.balance >= 0 ? 'text-green-600' : 'text-red-600';
           const savRate  = s.income > 0 ? Math.round((s.balance / s.income) * 100) : null;
-          const catExp   = Calc.categoryTotals(tx, key, 'expense');
+          const catExp   = Calc.categoryTotals(tx, key, 'expense', recAll);
           const topCat   = catExp[0];
 
           return `
@@ -118,7 +119,7 @@ const UIHistory = {
 
     if (last6.length > 1) {
       const labels = last6.map(k => Calc.fmtMonthShort(k));
-      const sums   = last6.map(k => Calc.summary(tx, k));
+      const sums   = last6.map(k => Calc.summary(tx, k, recAll));
       Charts.bar('chart-hist', labels, [
         { label: 'Entradas', data: sums.map(s => s.income),   backgroundColor: '#22c55e', borderRadius: 4 },
         { label: 'Saídas',   data: sums.map(s => s.expenses), backgroundColor: '#f43f5e', borderRadius: 4 },

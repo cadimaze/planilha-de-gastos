@@ -1,11 +1,13 @@
 const UIDashboard = {
   render(monthKey) {
     const txAll    = Storage.getTransactions();
+    const recAll   = Storage.getRecurrentes();
     const planned  = Storage.getPlanned();
-    const s        = Calc.summary(txAll, monthKey);
-    const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense');
-    const catInc   = Calc.categoryTotals(txAll, monthKey, 'income');
-    const recent   = [...s.tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+    const s        = Calc.bankSummary(txAll, monthKey, recAll);
+    const wallet   = Calc.walletSummary(txAll, monthKey, recAll);
+    const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
+    const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
+    const recent   = [...Calc.summary(txAll, monthKey, recAll).tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
     const pByMonth = Calc.plannedByMonth(planned);
     const pImpact  = pByMonth[monthKey] || [];
     const pTotal   = pImpact.reduce((a, x) => a + x.amount, 0);
@@ -65,6 +67,46 @@ const UIDashboard = {
           ${s.expenses > 0 ? `<p class="text-xs text-gray-400 mt-1">${s.tx.filter(t=>t.type==='expense').length} lançamentos</p>` : '<p class="text-xs text-gray-300 mt-1">Nenhuma</p>'}
         </div>
       </div>
+
+      ${wallet.va.has || wallet.vr.has ? `
+      <!-- VA/VR Wallet Cards -->
+      <div class="grid grid-cols-1 ${wallet.va.has && wallet.vr.has ? 'sm:grid-cols-2' : ''} gap-3 mb-5">
+        ${wallet.va.has ? `
+        <div class="bg-white rounded-2xl p-4 border border-orange-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            </div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vale Alimentação</p>
+          </div>
+          <p class="text-xl font-bold ${wallet.va.balance >= 0 ? 'text-green-600' : 'text-red-600'}">${Calc.fmt(wallet.va.balance)}</p>
+          <div class="flex justify-between mt-2 text-xs text-gray-400">
+            <span>Recebido: <span class="font-semibold text-green-600">+${Calc.fmt(wallet.va.income)}</span></span>
+            <span>Usado: <span class="font-semibold text-red-500">−${Calc.fmt(wallet.va.expenses)}</span></span>
+          </div>
+        </div>
+        ` : ''}
+        ${wallet.vr.has ? `
+        <div class="bg-white rounded-2xl p-4 border border-teal-100 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-6 h-6 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            </div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vale Refeição</p>
+          </div>
+          <p class="text-xl font-bold ${wallet.vr.balance >= 0 ? 'text-green-600' : 'text-red-600'}">${Calc.fmt(wallet.vr.balance)}</p>
+          <div class="flex justify-between mt-2 text-xs text-gray-400">
+            <span>Recebido: <span class="font-semibold text-green-600">+${Calc.fmt(wallet.vr.income)}</span></span>
+            <span>Usado: <span class="font-semibold text-red-500">−${Calc.fmt(wallet.vr.expenses)}</span></span>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
 
       <!-- Actions -->
       <div class="grid grid-cols-2 gap-3 mb-5">
