@@ -109,6 +109,12 @@ const Calc = {
     return Array.from(set).sort().reverse();
   },
 
+  // Cumulative bank balance from all months up to and including upToMonthKey
+  runningBalance(transactions, upToMonthKey, recorrentes = []) {
+    const months = this.allMonths(transactions).filter(m => m <= upToMonthKey);
+    return months.reduce((sum, key) => sum + this.bankSummary(transactions, key, recorrentes).balance, 0);
+  },
+
   // Returns array of { monthKey, amount, installment?, totalInstallments? } for a planned expense
   plannedImpacts(planned) {
     const result = [];

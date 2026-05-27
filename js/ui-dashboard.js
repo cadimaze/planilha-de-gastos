@@ -3,23 +3,25 @@ const UIDashboard = {
     const txAll    = Storage.getTransactions();
     const recAll   = Storage.getRecurrentes();
     const planned  = Storage.getPlanned();
-    const s        = Calc.bankSummary(txAll, monthKey, recAll);
-    const wallet   = Calc.walletSummary(txAll, monthKey, recAll);
+    const s          = Calc.bankSummary(txAll, monthKey, recAll);
+    const wallet     = Calc.walletSummary(txAll, monthKey, recAll);
+    const runningBal = Calc.runningBalance(txAll, monthKey, recAll);
+    const prevBal    = runningBal - s.balance;
     const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
     const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
     const recent   = [...Calc.summary(txAll, monthKey, recAll).tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
     const pByMonth = Calc.plannedByMonth(planned);
     const pImpact  = pByMonth[monthKey] || [];
     const pTotal   = pImpact.reduce((a, x) => a + x.amount, 0);
-    const projected = s.balance - pTotal;
+    const projected = runningBal - pTotal;
 
     const totalFlow = s.income + s.expenses;
     const incPct = totalFlow > 0 ? Math.round((s.income / totalFlow) * 100) : 0;
     const expPct = totalFlow > 0 ? Math.round((s.expenses / totalFlow) * 100) : 0;
     const savRate  = s.income > 0 ? Math.round((s.balance / s.income) * 100) : null;
 
-    const balColor  = s.balance >= 0 ? 'text-green-600' : 'text-red-600';
-    const balBadge  = s.balance >= 0
+    const balColor  = runningBal >= 0 ? 'text-green-600' : 'text-red-600';
+    const balBadge  = runningBal >= 0
       ? 'bg-green-50 text-green-700 border border-green-200'
       : 'bg-red-50 text-red-700 border border-red-200';
 
@@ -31,12 +33,19 @@ const UIDashboard = {
         <!-- Balance -->
         <div class="col-span-2 lg:col-span-2 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo do mês</p>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo em conta</p>
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${balBadge}">
-              ${s.balance >= 0 ? 'Positivo' : 'Negativo'}
+              ${runningBal >= 0 ? 'Positivo' : 'Negativo'}
             </span>
           </div>
-          <p class="text-3xl font-bold ${balColor} mb-3">${Calc.fmt(s.balance)}</p>
+          <p class="text-3xl font-bold ${balColor} mb-1">${Calc.fmt(runningBal)}</p>
+          ${prevBal !== 0 ? `
+          <div class="flex items-center gap-3 mb-3 text-xs text-gray-400">
+            <span>Meses anteriores: <span class="font-semibold ${prevBal >= 0 ? 'text-green-600' : 'text-red-500'}">${prevBal > 0 ? '+' : ''}${Calc.fmt(prevBal)}</span></span>
+            <span class="text-gray-200">|</span>
+            <span>Neste mês: <span class="font-semibold ${s.balance >= 0 ? 'text-green-600' : 'text-red-500'}">${s.balance > 0 ? '+' : ''}${Calc.fmt(s.balance)}</span></span>
+          </div>
+          ` : '<div class="mb-3"></div>'}
           <div class="space-y-1.5">
             <div class="flex items-center gap-2">
               <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">

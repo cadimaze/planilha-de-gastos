@@ -21,8 +21,9 @@ const UIHistory = {
       ${allMonths.length > 0 ? (() => {
         let running = 0;
         const rows = [...allMonths].sort().map(key => {
-          const s = Calc.summary(tx, key, recAll);
-          running += s.balance;
+          const s    = Calc.summary(tx, key, recAll);
+          const bank = Calc.bankSummary(tx, key, recAll);
+          running += bank.balance;
           return { key, s, running };
         }).reverse();
         const latestRunning = rows[0]?.running ?? 0;
