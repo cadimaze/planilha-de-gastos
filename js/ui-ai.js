@@ -152,25 +152,36 @@ const UIAI = {
 
     try {
       const prompt = this._buildPrompt();
-      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const models = [
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-flash-8b-latest',
+        'gemini-pro',
+      ];
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1200, temperature: 0.7 },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
+      let data, lastStatus;
+      for (const model of models) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 1200, temperature: 0.7 },
+          }),
+        });
+        data = await response.json();
+        lastStatus = response.status;
+        if (response.ok) break;
+        if (response.status === 404 || (data?.error?.status === 'NOT_FOUND')) continue;
         const msg = data?.error?.message || '';
-        if (response.status === 400) throw new Error(`Chave inválida ou modelo indisponível. ${msg}`);
         if (response.status === 401 || response.status === 403) throw new Error(`Sem permissão. Verifique se a chave está correta no Google AI Studio. ${msg}`);
         if (response.status === 429) throw new Error(`Cota excedida. Aguarde alguns segundos e tente novamente. ${msg}`);
         throw new Error(msg || `Erro HTTP ${response.status}`);
+      }
+
+      if (!data?.candidates) {
+        const msg = data?.error?.message || '';
+        throw new Error(msg || `Nenhum modelo disponível para esta chave (HTTP ${lastStatus}). Verifique sua chave no Google AI Studio.`);
       }
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhuma resposta recebida.';
