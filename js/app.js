@@ -41,6 +41,12 @@ const App = {
 
   // ── Login / Logout ────────────────────────────────────────────────────────
   async _onLogin() {
+    // Show loading (may have been hidden after a previous logout)
+    const loading = document.getElementById('loading');
+    loading.classList.remove('hidden', 'fade-out');
+    loading.style.opacity = '';
+    document.getElementById('login-screen').classList.add('hidden');
+
     this._updateUserInfo();
     try {
       this.planilhas = await Storage.getUserPlanilhas();
@@ -122,7 +128,9 @@ const App = {
   },
 
   _showApp() {
-    document.getElementById('loading').classList.add('hidden');
+    const loading = document.getElementById('loading');
+    loading.classList.add('fade-out');
+    setTimeout(() => loading.classList.add('hidden'), 350);
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('main-layout').classList.remove('hidden');
     this._buildMonthSelector();
@@ -136,7 +144,9 @@ const App = {
     this.transactions = []; this.planned = []; this.planilhas = [];
     this.currentPlanilha = null; this.currentPlanilhaId = null;
     this._initialized = false; this._loadCount = 0;
-    document.getElementById('loading').classList.add('hidden');
+    const loading = document.getElementById('loading');
+    loading.classList.remove('fade-out');
+    loading.classList.add('hidden');
     document.getElementById('main-layout').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
   },

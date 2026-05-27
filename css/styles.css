@@ -4,32 +4,37 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-/* Nav active state */
+/* ── Nav active state ──────────────────────────────────────── */
 .nav-btn.active {
   background-color: #eef2ff;
   color: #4338ca;
   font-weight: 600;
 }
 .nav-btn.active svg { color: #4338ca; }
-
 .mobile-nav-btn.active { color: #4f46e5; }
+html.dark .nav-btn.active { background-color: #1e1b4b; color: #a5b4fc; }
+html.dark .nav-btn.active svg { color: #a5b4fc; }
+html.dark .mobile-nav-btn.active { color: #818cf8; }
 
-/* Page enter animation */
+/* ── Page enter animation ───────────────────────────────────── */
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 #page-content > * { animation: pageIn 0.18s ease-out both; }
 
-/* Modal slide-up on mobile */
+/* ── Modal slide-up on mobile ───────────────────────────────── */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
@@ -38,32 +43,134 @@ body {
   #modal-box { animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1); }
 }
 
-/* Safe area for iOS notch */
+/* ── Loader bars ─────────────────────────────────────────────── */
+.loader-bar {
+  width: 7px;
+  border-radius: 3px 3px 2px 2px;
+  transform-origin: bottom;
+}
+.loader-bar:nth-child(1) { height: 35%; background: #a5b4fc; }
+.loader-bar:nth-child(2) { height: 60%; background: #818cf8; }
+.loader-bar:nth-child(3) { height: 100%; background: #4f46e5; }
+.loader-bar:nth-child(4) { height: 65%; background: #818cf8; }
+.loader-bar:nth-child(5) { height: 40%; background: #a5b4fc; }
+
+/* ── Loading fade-out ────────────────────────────────────────── */
+#loading {
+  transition: opacity 0.35s ease;
+}
+#loading.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Safe area for iOS notch ─────────────────────────────────── */
 .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-/* Input autofill fix */
+/* ── Input fixes ─────────────────────────────────────────────── */
 input:-webkit-autofill { -webkit-box-shadow: 0 0 0 40px white inset; }
+html.dark input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 40px #0f172a inset;
+  -webkit-text-fill-color: #f1f5f9;
+}
 
-/* Number input arrows hidden */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
-/* Date input */
 input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 
-/* Radio card */
+/* ── Radio card ───────────────────────────────────────────────── */
 .radio-card { transition: border-color 0.15s, background-color 0.15s; }
 .radio-card.selected { border-color: #6366f1; background-color: #f5f3ff; }
+html.dark .radio-card.selected { background-color: #1e1b4b; border-color: #6366f1; }
 
-/* Balance bar animation */
+/* ── Balance bar / card hover ─────────────────────────────────── */
 .balance-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-
-/* Card hover */
 .card-hover { transition: box-shadow 0.15s, transform 0.15s; }
 .card-hover:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
-
-/* Confirm delete button */
-.btn-danger { transition: background-color 0.15s; }
+html.dark .card-hover:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.35); }
 
 canvas { display: block; }
+
+
+/* ════════════════════════════════════════════════════════════
+   DARK MODE — CSS overrides for Tailwind utility classes
+   (applies universally to both static and JS-generated HTML)
+   ════════════════════════════════════════════════════════════ */
+
+/* Surfaces */
+html.dark body                    { background-color: #0f172a !important; }
+html.dark #loading                { background-color: #0f172a !important; }
+html.dark #login-screen           { background: linear-gradient(135deg, #1e1b4b, #0f172a) !important; }
+html.dark .bg-white               { background-color: #1e293b !important; }
+html.dark .bg-gray-50             { background-color: #0f172a !important; }
+html.dark .bg-gray-100            { background-color: #334155 !important; }
+html.dark .bg-gray-200            { background-color: #475569 !important; }
+
+/* Text */
+html.dark .text-gray-900          { color: #f1f5f9 !important; }
+html.dark .text-gray-800          { color: #e2e8f0 !important; }
+html.dark .text-gray-700          { color: #cbd5e1 !important; }
+html.dark .text-gray-600          { color: #94a3b8 !important; }
+html.dark .text-gray-500          { color: #64748b !important; }
+html.dark .text-gray-400          { color: #475569 !important; }
+html.dark .text-gray-300          { color: #334155 !important; }
+
+/* Borders */
+html.dark .border-gray-50         { border-color: #1e293b !important; }
+html.dark .border-gray-100        { border-color: #334155 !important; }
+html.dark .border-gray-200        { border-color: #334155 !important; }
+
+/* Dividers */
+html.dark .divide-gray-50  > :not([hidden]) ~ :not([hidden]) { border-color: #0f172a !important; }
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+
+/* Inputs & Selects */
+html.dark input:not([type="checkbox"]):not([type="radio"]) {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+html.dark select {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+html.dark input::placeholder      { color: #475569 !important; }
+
+/* Hover states */
+html.dark .hover\:bg-gray-50:hover  { background-color: #334155 !important; }
+html.dark .hover\:bg-gray-100:hover { background-color: #475569 !important; }
+html.dark .hover\:bg-red-50:hover   { background-color: #3b0000 !important; }
+
+/* Dark "secondary" button (bg-gray-900) — invert to light in dark mode */
+html.dark .bg-gray-900            { background-color: #e2e8f0 !important; color: #0f172a !important; }
+html.dark .hover\:bg-gray-700:hover { background-color: #f1f5f9 !important; }
+
+/* Indigo accents */
+html.dark .bg-indigo-50           { background-color: #1e1b4b !important; }
+html.dark .border-indigo-100      { border-color: #3730a3 !important; }
+html.dark .text-indigo-700        { color: #a5b4fc !important; }
+html.dark .text-indigo-900        { color: #c7d2fe !important; }
+
+/* Green / Red financial colors */
+html.dark .bg-green-50            { background-color: #052e16 !important; }
+html.dark .border-green-100       { border-color: #14532d !important; }
+html.dark .text-green-700         { color: #4ade80 !important; }
+html.dark .bg-red-50              { background-color: #450a0a !important; }
+html.dark .border-red-100         { border-color: #7f1d1d !important; }
+html.dark .bg-red-100             { background-color: #7f1d1d !important; }
+
+/* Badges */
+html.dark .bg-purple-100          { background-color: #3b0764 !important; }
+html.dark .text-purple-700        { color: #d8b4fe !important; }
+html.dark .bg-blue-100            { background-color: #1e3a5f !important; }
+html.dark .text-blue-700          { color: #93c5fd !important; }
+html.dark .bg-green-100           { background-color: #052e16 !important; }
+html.dark .text-green-800         { color: #4ade80 !important; }
+html.dark .bg-red-600             { background-color: #dc2626 !important; }
+
+/* Shadow adjustment */
+html.dark .shadow-sm              { box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.4) !important; }

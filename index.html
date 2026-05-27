@@ -25,13 +25,17 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <!-- Dark mode: apply before first paint to prevent flash -->
+  <script>if(localStorage.getItem('pg_theme')==='dark')document.documentElement.classList.add('dark')</script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -70,14 +74,16 @@
   </div>
 
   <!-- Loading -->
-  <div id="loading" class="flex items-center justify-center h-screen bg-white">
+  <div id="loading" class="fixed inset-0 flex items-center justify-center bg-white z-50">
     <div class="text-center">
-      <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+      <div class="flex items-end gap-[5px] h-10 justify-center mb-5">
+        <span class="loader-bar"></span>
+        <span class="loader-bar"></span>
+        <span class="loader-bar"></span>
+        <span class="loader-bar"></span>
+        <span class="loader-bar"></span>
       </div>
-      <p class="text-gray-500 text-sm">Carregando...</p>
+      <p class="text-xs text-gray-400 font-medium tracking-widest uppercase">Carregando</p>
     </div>
   </div>
 
@@ -149,6 +155,17 @@
             <div class="flex-1 min-w-0">
               <p id="user-name" class="text-xs font-semibold text-gray-700 truncate"></p>
             </div>
+            <button onclick="Theme.toggle()" title="Alternar tema"
+              class="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0">
+              <!-- Moon (shown in light mode) -->
+              <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              <!-- Sun (shown in dark mode) -->
+              <svg data-theme-icon="sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </button>
             <button onclick="App.signOut()"
               title="Sair"
               class="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
@@ -171,6 +188,15 @@
             <p id="page-subtitle" class="text-xs text-gray-400"></p>
           </div>
           <div class="flex items-center gap-2">
+            <button onclick="Theme.toggle()" title="Alternar tema"
+              class="lg:hidden p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
+              <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              <svg data-theme-icon="sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </button>
             <button onclick="UIPlanilhas.showManage()"
               class="lg:hidden flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors max-w-[120px]">
               <svg class="w-3.5 h-3.5 flex-shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,6 +257,7 @@
 
 </div>
 
+<script src="js/theme.js"></script>
 <script src="js/firebase.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/calculations.js"></script>
