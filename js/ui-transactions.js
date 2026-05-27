@@ -2,6 +2,7 @@ const UITransactions = {
   filter: 'all',
   search: '',
   _selectedCardId: null,
+  _selectedCurrency: 'BRL',
 
   INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Vale Alimentação', 'Vale Refeição', 'Outros'],
   EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
@@ -89,6 +90,9 @@ const UITransactions = {
               const cardBadge = txCard
                 ? `<span class="text-xs font-semibold px-1.5 py-0.5 rounded-md ml-1 text-white" style="background:${txCard.color || '#374151'}">${txCard.name}</span>`
                 : '';
+              const usdBadge = t.currency === 'USD'
+                ? `<span class="text-xs bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">US$${(t.amount||0).toFixed(2)}</span>`
+                : '';
               return `
               <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
                    onclick="${clickHandler}">
@@ -98,14 +102,14 @@ const UITransactions = {
                 <div class="ml-3 flex-1 min-w-0">
                   <div class="flex items-center gap-1 flex-wrap">
                     <p class="text-sm font-medium text-gray-900 truncate">${t.description}</p>
-                    ${instBadge}${recBadge}${cardBadge}
+                    ${instBadge}${recBadge}${cardBadge}${usdBadge}
                   </div>
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                   ${t.notes ? `<p class="text-xs text-gray-300 truncate">${t.notes}</p>` : ''}
                 </div>
                 <div class="flex items-center gap-2 ml-2 flex-shrink-0">
                   <p class="text-sm font-bold ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
-                    ${t.type==='income' ? '+' : '−'}${Calc.fmt(t.amount)}
+                    ${t.type==='income' ? '+' : '−'}${Calc.fmt(Calc.toBRL(t.amount, t.currency))}
                   </p>
                   <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -128,6 +132,10 @@ const UITransactions = {
     const cats  = type === 'income' ? this.INCOME_CATS : this.EXPENSE_CATS;
     const today = new Date().toISOString().slice(0, 10);
     this._selectedCardId = tx?.cardId || null;
+    this._selectedCurrency = tx?.currency || 'BRL';
+    const _curBRL = this._selectedCurrency !== 'USD' ? 'background:#111827;border-color:#111827;color:white' : 'background:white;border-color:#e5e7eb;color:#4b5563';
+    const _curUSD = this._selectedCurrency === 'USD' ? 'background:#111827;border-color:#111827;color:white' : 'background:white;border-color:#e5e7eb;color:#4b5563';
+    const _amtPrefix = this._selectedCurrency === 'USD' ? 'US$' : 'R$';
 
     document.getElementById('modal-box').innerHTML = `
       <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
@@ -170,13 +178,25 @@ const UITransactions = {
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1.5">Valor *</label>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-xs font-semibold text-gray-600">Valor *</label>
+                <div class="flex">
+                  <button type="button" id="cur-btn-brl" onclick="UITransactions._setCurrency('BRL')"
+                    class="px-1.5 py-0.5 text-[10px] font-bold rounded-l border border-r-0 border-gray-200 transition-all"
+                    style="${_curBRL}">R$</button>
+                  <button type="button" id="cur-btn-usd" onclick="UITransactions._setCurrency('USD')"
+                    class="px-1.5 py-0.5 text-[10px] font-bold rounded-r border border-gray-200 transition-all"
+                    style="${_curUSD}">US$</button>
+                </div>
+              </div>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                <span id="amount-prefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">${_amtPrefix}</span>
                 <input name="amount" type="number" required min="0.01" step="0.01" placeholder="0,00"
                   value="${tx?.amount || ''}"
+                  oninput="UITransactions._updateUsdHint(this.value)"
                   class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
               </div>
+              <p id="usd-hint" class="${this._selectedCurrency === 'USD' ? '' : 'hidden'} text-xs text-blue-500 mt-1">≈ R$ <span id="usd-hint-val">${this._selectedCurrency === 'USD' ? Calc.fmt((parseFloat(tx?.amount)||0) * (Calc._usdRate||6)) : ''}</span></p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1.5">Data *</label>
@@ -335,6 +355,30 @@ const UITransactions = {
     });
   },
 
+  _setCurrency(c) {
+    this._selectedCurrency = c;
+    const brlBtn = document.getElementById('cur-btn-brl');
+    const usdBtn = document.getElementById('cur-btn-usd');
+    const prefix = document.getElementById('amount-prefix');
+    const hint   = document.getElementById('usd-hint');
+    const active = 'background:#111827;border-color:#111827;color:white';
+    const inact  = 'background:white;border-color:#e5e7eb;color:#4b5563';
+    if (brlBtn) brlBtn.style.cssText = c === 'BRL' ? active : inact;
+    if (usdBtn) usdBtn.style.cssText = c === 'USD' ? active : inact;
+    if (prefix) prefix.textContent = c === 'USD' ? 'US$' : 'R$';
+    if (hint)   hint.classList.toggle('hidden', c !== 'USD');
+    if (c === 'USD') {
+      const amtEl = document.querySelector('[name="amount"]');
+      this._updateUsdHint(amtEl?.value || '');
+    }
+  },
+
+  _updateUsdHint(val) {
+    const el = document.getElementById('usd-hint-val');
+    if (!el) return;
+    el.textContent = Calc.fmt((parseFloat(val) || 0) * (Calc._usdRate || 6));
+  },
+
   switchTab(tab) {
     const single = document.getElementById('form-single');
     const inst   = document.getElementById('form-inst');
@@ -431,6 +475,7 @@ const UITransactions = {
       category:    form.category.value,
       notes:       form.notes.value.trim(),
       cardId:      type === 'expense' ? (this._selectedCardId || null) : null,
+      currency:    this._selectedCurrency || 'BRL',
     };
     const btn = document.getElementById('tx-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
@@ -486,6 +531,7 @@ const UITransactions = {
         notes:             '',
         groupId,
         cardId:            this._selectedCardId || null,
+        currency:          this._selectedCurrency || 'BRL',
         installmentNumber: i + 1,
         totalInstallments: n,
       };

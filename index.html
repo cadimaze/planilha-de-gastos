@@ -271,6 +271,28 @@
         </button>
       </div>
     </nav>
+
+    <!-- FAB (mobile only) -->
+    <div id="fab-container" class="lg:hidden fixed bottom-16 right-4 z-30 flex flex-col items-end gap-2">
+      <div id="fab-menu" style="display:none" class="flex-col items-end gap-2 pb-1">
+        <button onclick="UITransactions.openForm('expense'); FAB.close()"
+          class="flex items-center gap-2 bg-red-600 text-white pl-3 pr-4 py-2.5 rounded-2xl shadow-lg text-sm font-semibold active:scale-95 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
+          Saída
+        </button>
+        <button onclick="UITransactions.openForm('income'); FAB.close()"
+          class="flex items-center gap-2 bg-green-600 text-white pl-3 pr-4 py-2.5 rounded-2xl shadow-lg text-sm font-semibold active:scale-95 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Entrada
+        </button>
+      </div>
+      <button id="fab-btn" onclick="FAB.toggle()"
+        class="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all">
+        <svg id="fab-icon" class="w-6 h-6 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Modal Overlay -->
@@ -284,6 +306,7 @@
 <script src="js/theme.js"></script>
 <script src="js/firebase.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/currency.js"></script>
 <script src="js/calculations.js"></script>
 <script src="js/helpers.js"></script>
 <script src="js/charts.js"></script>

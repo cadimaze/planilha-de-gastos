@@ -69,6 +69,12 @@ const App = {
 
     const lastId = localStorage.getItem('pg_last_planilha');
     const found  = this.planilhas.find(p => p.id === lastId) || this.planilhas[0];
+    const cachedRate = Currency._getCached();
+    if (cachedRate) Calc._usdRate = cachedRate;
+    Currency.getRate().then(rate => {
+      Calc._usdRate = rate;
+      if (this._initialized) this.refresh();
+    }).catch(() => {});
     this.switchPlanilha(found.id);
   },
 
@@ -112,6 +118,7 @@ const App = {
             installmentNumber: d.installmentNumber || null,
             totalInstallments: d.totalInstallments || null,
             cardId:            d.cardId            || null,
+            currency:          d.currency          || 'BRL',
           };
         });
         if (!this._initialized) onLoad();
@@ -163,7 +170,7 @@ const App = {
       .collection('investimentos').onSnapshot(snap => {
         this.investimentos = snap.docs.map(doc => {
           const d = doc.data();
-          return { id: doc.id, type: d.type, description: d.description || '', amount: d.amount, date: d.date, notes: d.notes || '' };
+          return { id: doc.id, type: d.type, description: d.description || '', amount: d.amount, date: d.date, notes: d.notes || '', currency: d.currency || 'BRL' };
         });
         if (this._initialized) this.refresh();
       }, err => console.error('investimentos snapshot:', err));

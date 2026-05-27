@@ -67,3 +67,28 @@ const Modal = {
     if (e.target === document.getElementById('modal-overlay')) this.close();
   },
 };
+
+const FAB = {
+  _open: false,
+  _handler: null,
+  toggle() { this._open ? this.close() : this.open(); },
+  open() {
+    this._open = true;
+    const menu = document.getElementById('fab-menu');
+    const icon = document.getElementById('fab-icon');
+    if (menu) menu.style.display = 'flex';
+    if (icon) icon.style.transform = 'rotate(45deg)';
+    this._handler = e => {
+      if (!document.getElementById('fab-container')?.contains(e.target)) this.close();
+    };
+    setTimeout(() => document.addEventListener('click', this._handler), 0);
+  },
+  close() {
+    this._open = false;
+    const menu = document.getElementById('fab-menu');
+    const icon = document.getElementById('fab-icon');
+    if (menu) menu.style.display = 'none';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+    if (this._handler) { document.removeEventListener('click', this._handler); this._handler = null; }
+  },
+};

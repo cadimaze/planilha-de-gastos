@@ -37,10 +37,10 @@ const UIInvestimentos = {
 
   render() {
     const inv   = Storage.getInvestimentos();
-    const total = inv.reduce((s, i) => s + i.amount, 0);
+    const total = inv.reduce((s, i) => s + Calc.toBRL(i.amount, i.currency), 0);
 
     const byType = {};
-    inv.forEach(i => { byType[i.type] = (byType[i.type] || 0) + i.amount; });
+    inv.forEach(i => { byType[i.type] = (byType[i.type] || 0) + Calc.toBRL(i.amount, i.currency); });
     const typeList = Object.entries(byType)
       .map(([type, amount]) => ({ type, amount }))
       .sort((a, b) => b.amount - a.amount);
@@ -99,6 +99,9 @@ const UIInvestimentos = {
           <div class="divide-y divide-gray-50">
             ${sorted.map(inv => {
               const col = this._typeColor(inv.type);
+              const invAmtDisplay = inv.currency === 'USD'
+                ? `<span class="text-xs font-semibold text-blue-600">US$${(inv.amount||0).toFixed(2)}</span><span class="text-[10px] text-gray-400 ml-1">≈ ${Calc.fmt(Calc.toBRL(inv.amount,'USD'))}</span>`
+                : Calc.fmt(inv.amount);
               return `
               <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
                    onclick="UIInvestimentos.openForm('${inv.id}')">
@@ -113,7 +116,7 @@ const UIInvestimentos = {
                   <p class="text-xs text-gray-400">${Calc.fmtDate(inv.date)}${inv.notes ? ' · ' + inv.notes : ''}</p>
                 </div>
                 <div class="flex items-center gap-2 ml-2 flex-shrink-0">
-                  <p class="text-sm font-bold text-indigo-600">${Calc.fmt(inv.amount)}</p>
+                  <p class="text-sm font-bold text-indigo-600">${invAmtDisplay}</p>
                   <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -126,10 +129,16 @@ const UIInvestimentos = {
     `;
   },
 
+  _selectedCurrency: 'BRL',
+
   openForm(id) {
     const inv   = id ? Storage.getInvestimentos().find(i => i.id === id) : null;
     const today = new Date().toISOString().slice(0, 10);
     const types = Calc.INVESTMENT_TYPES;
+    this._selectedCurrency = inv?.currency || 'BRL';
+    const _curBRL = this._selectedCurrency !== 'USD' ? 'background:#111827;border-color:#111827;color:white' : 'background:white;border-color:#e5e7eb;color:#4b5563';
+    const _curUSD = this._selectedCurrency === 'USD' ? 'background:#111827;border-color:#111827;color:white' : 'background:white;border-color:#e5e7eb;color:#4b5563';
+    const _amtPrefix = this._selectedCurrency === 'USD' ? 'US$' : 'R$';
 
     document.getElementById('modal-box').innerHTML = `
       <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
@@ -163,13 +172,25 @@ const UIInvestimentos = {
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Valor (R$) *</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-gray-600">Valor *</label>
+              <div class="flex">
+                <button type="button" id="inv-cur-brl" onclick="UIInvestimentos._setCurrency('BRL')"
+                  class="px-1.5 py-0.5 text-[10px] font-bold rounded-l border border-r-0 border-gray-200 transition-all"
+                  style="${_curBRL}">R$</button>
+                <button type="button" id="inv-cur-usd" onclick="UIInvestimentos._setCurrency('USD')"
+                  class="px-1.5 py-0.5 text-[10px] font-bold rounded-r border border-gray-200 transition-all"
+                  style="${_curUSD}">US$</button>
+              </div>
+            </div>
             <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+              <span id="inv-amount-prefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">${_amtPrefix}</span>
               <input id="inv-amount" type="number" min="0.01" step="0.01" placeholder="0,00"
                 value="${inv?.amount || ''}"
+                oninput="UIInvestimentos._updateUsdHint(this.value)"
                 class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
+            <p id="inv-usd-hint" class="${this._selectedCurrency === 'USD' ? '' : 'hidden'} text-xs text-blue-500 mt-1">≈ R$ <span id="inv-usd-hint-val">${this._selectedCurrency === 'USD' ? Calc.fmt((parseFloat(inv?.amount)||0) * (Calc._usdRate||6)) : ''}</span></p>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Data *</label>
@@ -216,7 +237,7 @@ const UIInvestimentos = {
     if (!amount || amount <= 0) { alert('Informe um valor válido.'); return; }
     if (!date)               { alert('Informe a data.'); return; }
 
-    const data = { type, description: desc, amount, date, notes };
+    const data = { type, description: desc, amount, date, notes, currency: this._selectedCurrency || 'BRL' };
     const btn  = document.getElementById('inv-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
 
@@ -229,6 +250,30 @@ const UIInvestimentos = {
       alert('Erro ao salvar. Verifique sua conexão.');
       if (btn) { btn.disabled = false; btn.textContent = id ? 'Salvar alterações' : 'Adicionar'; }
     }
+  },
+
+  _setCurrency(c) {
+    this._selectedCurrency = c;
+    const brlBtn = document.getElementById('inv-cur-brl');
+    const usdBtn = document.getElementById('inv-cur-usd');
+    const prefix = document.getElementById('inv-amount-prefix');
+    const hint   = document.getElementById('inv-usd-hint');
+    const active = 'background:#111827;border-color:#111827;color:white';
+    const inact  = 'background:white;border-color:#e5e7eb;color:#4b5563';
+    if (brlBtn) brlBtn.style.cssText = c === 'BRL' ? active : inact;
+    if (usdBtn) usdBtn.style.cssText = c === 'USD' ? active : inact;
+    if (prefix) prefix.textContent = c === 'USD' ? 'US$' : 'R$';
+    if (hint)   hint.classList.toggle('hidden', c !== 'USD');
+    if (c === 'USD') {
+      const amtEl = document.getElementById('inv-amount');
+      this._updateUsdHint(amtEl?.value || '');
+    }
+  },
+
+  _updateUsdHint(val) {
+    const el = document.getElementById('inv-usd-hint-val');
+    if (!el) return;
+    el.textContent = Calc.fmt((parseFloat(val) || 0) * (Calc._usdRate || 6));
   },
 
   deleteInvestimento(id) {

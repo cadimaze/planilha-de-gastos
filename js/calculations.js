@@ -7,6 +7,14 @@ const Calc = {
     'Criptomoedas', 'Previdência Privada', 'Outros',
   ],
 
+  _usdRate: 6.0,
+
+  toBRL(amount, currency) {
+    if (!currency || currency === 'BRL') return amount || 0;
+    if (currency === 'USD') return (amount || 0) * this._usdRate;
+    return amount || 0;
+  },
+
   fmt(value) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
   },
@@ -64,8 +72,8 @@ const Calc = {
       ...this.txForMonth(transactions, key),
       ...this.recurrentForMonth(recorrentes, key),
     ];
-    const income   = tx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expenses = tx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const income   = tx.filter(t => t.type === 'income').reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
+    const expenses = tx.filter(t => t.type === 'expense').reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
     return { income, expenses, balance: income - expenses, tx, count: tx.length };
   },
 
@@ -73,8 +81,8 @@ const Calc = {
   bankSummary(transactions, key, recorrentes = []) {
     const s = this.summary(transactions, key, recorrentes);
     const tx = s.tx.filter(t => !this.VA_VR_CATS.includes(t.category));
-    const income   = tx.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const expenses = tx.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    const income   = tx.filter(t => t.type === 'income').reduce((acc, t) => acc + this.toBRL(t.amount, t.currency), 0);
+    const expenses = tx.filter(t => t.type === 'expense').reduce((acc, t) => acc + this.toBRL(t.amount, t.currency), 0);
     return { income, expenses, balance: income - expenses, tx, count: tx.length };
   },
 
@@ -85,8 +93,8 @@ const Calc = {
       ...this.recurrentForMonth(recorrentes, key),
     ];
     const wallet = (inCats, outCats) => {
-      const inc = allTx.filter(t => inCats.includes(t.category)).reduce((s, t) => s + t.amount, 0);
-      const exp = allTx.filter(t => outCats.includes(t.category)).reduce((s, t) => s + t.amount, 0);
+      const inc = allTx.filter(t => inCats.includes(t.category)).reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
+      const exp = allTx.filter(t => outCats.includes(t.category)).reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
       return { income: inc, expenses: exp, balance: inc - exp, has: inc > 0 || exp > 0 };
     };
     return {
@@ -102,7 +110,7 @@ const Calc = {
       ...this.recurrentForMonth(recorrentes, key),
     ]
       .filter(t => t.type === type)
-      .forEach(t => { map[t.category] = (map[t.category] || 0) + t.amount; });
+      .forEach(t => { map[t.category] = (map[t.category] || 0) + this.toBRL(t.amount, t.currency); });
     return Object.entries(map)
       .map(([category, amount]) => ({ category, amount }))
       .sort((a, b) => b.amount - a.amount);
@@ -139,7 +147,7 @@ const Calc = {
     const { from, to } = this.billingPeriod(card);
     return transactions
       .filter(t => t.cardId === card.id && t.type === 'expense' && t.date >= from && t.date <= to)
-      .reduce((s, t) => s + t.amount, 0);
+      .reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
   },
 
   diasAteVencimento(dueDay) {
@@ -152,9 +160,9 @@ const Calc = {
   },
 
   investimentoSummary(investimentos) {
-    const total = (investimentos || []).reduce((s, i) => s + i.amount, 0);
+    const total = (investimentos || []).reduce((s, i) => s + this.toBRL(i.amount, i.currency), 0);
     const byType = {};
-    (investimentos || []).forEach(i => { byType[i.type] = (byType[i.type] || 0) + i.amount; });
+    (investimentos || []).forEach(i => { byType[i.type] = (byType[i.type] || 0) + this.toBRL(i.amount, i.currency); });
     const typeList = Object.entries(byType)
       .map(([type, amount]) => ({ type, amount }))
       .sort((a, b) => b.amount - a.amount);
@@ -167,7 +175,7 @@ const Calc = {
     const bankBal = months.reduce((sum, key) => sum + this.bankSummary(transactions, key, recorrentes).balance, 0);
     const invTotal = (investimentos || [])
       .filter(i => this.monthKey(i.date) <= upToMonthKey)
-      .reduce((s, i) => s + i.amount, 0);
+      .reduce((s, i) => s + this.toBRL(i.amount, i.currency), 0);
     return bankBal - invTotal;
   },
 
