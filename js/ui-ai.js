@@ -1,5 +1,5 @@
 // Cole aqui a chave do Google AI Studio (aistudio.google.com → Get API key)
-const GEMINI_API_KEY = '';
+const GEMINI_API_KEY = 'AIzaSyAGIYLuVowYsmKvELf-MWOn_Q4n2Q3CYAw';
 
 const UIAI = {
   render() {
