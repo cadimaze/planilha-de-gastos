@@ -309,16 +309,23 @@ const UICartoes = {
       if (data.type === 'credito') {
         const rows = document.querySelectorAll('.import-row');
         const txBatch = [];
+        const now = new Date();
+        const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const todayStr = `${curMonth}-${String(now.getDate()).padStart(2,'0')}`;
         rows.forEach(row => {
           const month  = row.querySelector('.import-month')?.value;
           const amount = parseFloat(row.querySelector('.import-amount')?.value);
           if (month && amount > 0) {
+            // Current month: use today so it falls in the active billing period.
+            // Future/past months: use 1st — always within the billing period since closingDay >= 1.
+            const date = month === curMonth ? todayStr : `${month}-01`;
             txBatch.push({
               type:        'expense',
               description: 'Saldo importado',
               category:    'Outros',
               cardId,
-              date:        `${month}-15`,
+              amount,
+              date,
               notes:       '',
             });
           }
