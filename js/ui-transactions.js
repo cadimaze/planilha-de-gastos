@@ -57,7 +57,8 @@ const UITransactions = {
                 ? `<span class="text-xs bg-purple-100 text-purple-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">${t.installmentNumber}/${t.totalInstallments}</span>`
                 : '';
               return `
-              <div class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors group">
+              <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
+                   onclick="UITransactions.openForm('${t.type}', '${t.id}')">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type==='income' ? 'bg-green-50' : 'bg-red-50'}">
                   ${categoryIcon(t.category, t.type)}
                 </div>
@@ -69,20 +70,13 @@ const UITransactions = {
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                   ${t.notes ? `<p class="text-xs text-gray-300 truncate">${t.notes}</p>` : ''}
                 </div>
-                <div class="flex items-center gap-1 ml-2">
-                  <p class="text-sm font-bold flex-shrink-0 ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
+                <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                  <p class="text-sm font-bold ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
                     ${t.type==='income' ? '+' : '−'}${Calc.fmt(t.amount)}
                   </p>
-                  <div class="flex gap-0.5 ml-1 opacity-0 group-hover:opacity-100 lg:opacity-100 transition-opacity">
-                    <button onclick="UITransactions.openForm('${t.type}', '${t.id}')"
-                      class="p-1.5 text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button onclick="UITransactions.confirmDelete('${t.id}', '${t.groupId || ''}', ${t.totalInstallments || 0})"
-                      class="p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                  </div>
+                  <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </div>`;
             }).join('')}
@@ -171,9 +165,16 @@ const UITransactions = {
             <button type="button" onclick="Modal.close()" class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancelar</button>
             <button type="button" id="tx-submit-btn" onclick="UITransactions.submitForm('${type}', '${editId || ''}')"
               class="flex-1 py-3 ${type==='income' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50">
-              ${tx ? 'Salvar' : 'Adicionar'}
+              ${tx ? 'Salvar alterações' : 'Adicionar'}
             </button>
           </div>
+          ${tx ? `
+          <div class="pt-1">
+            <button type="button" onclick="UITransactions.confirmDelete('${tx.id}', '${tx.groupId || ''}', ${tx.totalInstallments || 0})"
+              class="w-full py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors font-medium">
+              Excluir lançamento
+            </button>
+          </div>` : ''}
         </form>
       </div>
 
