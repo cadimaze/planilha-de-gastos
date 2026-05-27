@@ -147,7 +147,10 @@ const App = {
         });
         if (!this._initialized) onLoad();
         else this.refresh();
-      }, err => console.error('recorrentes snapshot:', err));
+      }, err => {
+        console.error('recorrentes snapshot:', err);
+        if (!this._initialized) onLoad();
+      });
   },
 
   _showApp() {
