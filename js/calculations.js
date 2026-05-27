@@ -61,12 +61,14 @@ const Calc = {
       result.push({ monthKey: this.monthKey(planned.startDate), amount: planned.totalAmount });
     } else {
       const n = parseInt(planned.installments) || 1;
-      const amt = planned.totalAmount / n;
       for (let i = 0; i < n; i++) {
         const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+        const amount = planned.installmentAmounts && planned.installmentAmounts[i] != null
+          ? planned.installmentAmounts[i]
+          : planned.totalAmount / n;
         result.push({
           monthKey: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-          amount: amt,
+          amount,
           installment: i + 1,
           totalInstallments: n,
         });

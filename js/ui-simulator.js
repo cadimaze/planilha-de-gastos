@@ -48,7 +48,12 @@ const UISimulator = {
         ` : `
           <div class="divide-y divide-gray-50">
             ${planned.map(p => {
-              const instAmt = p.paymentType === 'installment' ? p.totalAmount / p.installments : null;
+              const hasCustom = p.installmentAmounts && p.installmentAmounts.length > 0;
+              const instLabel = p.paymentType === 'installment'
+                ? hasCustom
+                  ? `${p.installments}x (valores variáveis)`
+                  : `${p.installments}x de ${Calc.fmt(p.totalAmount / p.installments)}`
+                : null;
               const endDate = p.paymentType === 'installment' ? (() => {
                 const d = new Date(p.startDate + 'T12:00:00');
                 d.setMonth(d.getMonth() + p.installments - 1);
@@ -70,7 +75,7 @@ const UISimulator = {
                   </div>
                   <p class="text-base font-bold text-red-600 mt-0.5">${Calc.fmt(p.totalAmount)}</p>
                   <p class="text-xs text-gray-400 mt-0.5">
-                    ${instAmt ? `${p.installments}x de ${Calc.fmt(instAmt)} · ` : ''}
+                    ${instLabel ? `${instLabel} · ` : ''}
                     Início: ${Calc.fmtDate(p.startDate)}
                     ${endDate ? ` · Fim: ${endDate}` : ''}
                   </p>
@@ -205,16 +210,32 @@ const UISimulator = {
           </div>
           <input type="hidden" name="paymentType" id="paymentType" value="lump">
         </div>
-        <div id="inst-field" class="hidden">
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Número de parcelas *</label>
-          <input name="installments" type="number" min="2" max="120" placeholder="Ex: 12"
-            oninput="UISimulator.updatePreview()"
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <p id="inst-preview" class="text-xs text-indigo-600 font-semibold mt-1"></p>
+        <div id="inst-field" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Número de parcelas *</label>
+            <input name="installments" type="number" min="2" max="120" placeholder="Ex: 12"
+              oninput="UISimulator.updatePreview(); UISimulator.buildInstRows()"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <p id="inst-preview" class="text-xs text-indigo-600 font-semibold mt-1"></p>
+          </div>
+          <label class="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" id="custom-amounts-toggle" onchange="UISimulator.toggleCustom(this.checked)"
+              class="w-4 h-4 rounded accent-indigo-600">
+            <span class="text-xs font-semibold text-gray-600">Definir valor de cada parcela individualmente</span>
+          </label>
+          <div id="custom-amounts-section" class="hidden space-y-2">
+            <p class="text-xs text-gray-400">Informe o valor exato de cada parcela (útil para parcelas com juros variáveis).</p>
+            <div id="custom-amounts-rows" class="space-y-1.5 max-h-52 overflow-y-auto pr-1"></div>
+            <div class="flex justify-between items-center pt-1.5 border-t border-gray-100">
+              <span class="text-xs text-gray-500 font-medium">Total calculado</span>
+              <span id="custom-total" class="text-xs font-bold text-indigo-600"></span>
+            </div>
+          </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Mês de início *</label>
           <input name="startDate" type="date" required value="${today}"
+            onchange="UISimulator.buildInstRows()"
             class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="flex gap-3 pt-1">
@@ -246,6 +267,10 @@ const UISimulator = {
       if (instInput) { instInput.required = false; instInput.value = ''; }
       const p = document.getElementById('inst-preview');
       if (p) p.textContent = '';
+      const toggle = document.getElementById('custom-amounts-toggle');
+      if (toggle) { toggle.checked = false; }
+      const section = document.getElementById('custom-amounts-section');
+      if (section) section.classList.add('hidden');
     } else {
       inst.className = 'radio-card selected border-2 border-indigo-500 bg-indigo-50 rounded-xl p-3 cursor-pointer';
       lump.className = 'radio-card border-2 border-gray-200 rounded-xl p-3 cursor-pointer';
@@ -254,11 +279,68 @@ const UISimulator = {
     }
   },
 
+  toggleCustom(checked) {
+    const section = document.getElementById('custom-amounts-section');
+    if (!section) return;
+    if (checked) {
+      section.classList.remove('hidden');
+      this.buildInstRows();
+    } else {
+      section.classList.add('hidden');
+    }
+    this.updatePreview();
+  },
+
+  buildInstRows() {
+    const toggle = document.getElementById('custom-amounts-toggle');
+    if (!toggle?.checked) return;
+    const n = parseInt(document.querySelector('[name="installments"]')?.value);
+    const startDate = document.querySelector('[name="startDate"]')?.value;
+    const rowsDiv = document.getElementById('custom-amounts-rows');
+    if (!rowsDiv) return;
+    if (!n || n < 2 || !startDate) { rowsDiv.innerHTML = ''; return; }
+
+    const start = new Date(startDate + 'T12:00:00');
+    const existing = {};
+    rowsDiv.querySelectorAll('[data-inst-row]').forEach(inp => {
+      existing[inp.dataset.instRow] = inp.value;
+    });
+
+    rowsDiv.innerHTML = Array.from({ length: n }, (_, i) => {
+      const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+      const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      const val = existing[i] || '';
+      return `
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 w-20 flex-shrink-0">${i + 1}ª (${label})</span>
+          <div class="relative flex-1">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+            <input type="number" min="0.01" step="0.01" placeholder="0,00" value="${val}"
+              oninput="UISimulator.updateCustomTotal()"
+              class="w-full pl-8 pr-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              data-inst-row="${i}">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    this.updateCustomTotal();
+  },
+
+  updateCustomTotal() {
+    const inputs = document.querySelectorAll('[data-inst-row]');
+    const total = Array.from(inputs).reduce((s, inp) => s + (parseFloat(inp.value) || 0), 0);
+    const el = document.getElementById('custom-total');
+    if (el) el.textContent = total > 0 ? Calc.fmt(total) : '';
+  },
+
   updatePreview() {
     const total = parseFloat(document.querySelector('[name="totalAmount"]')?.value);
     const n     = parseInt(document.querySelector('[name="installments"]')?.value);
     const p     = document.getElementById('inst-preview');
     if (!p) return;
+    const customToggle = document.getElementById('custom-amounts-toggle');
+    if (customToggle?.checked) { p.textContent = ''; return; }
     p.textContent = (total > 0 && n >= 2) ? `${n}x de ${Calc.fmt(total / n)} por mês` : '';
   },
 
@@ -267,11 +349,24 @@ const UISimulator = {
     if (!form.checkValidity()) { form.reportValidity(); return; }
     const paymentType = document.getElementById('paymentType').value;
     const instInput   = form.installments;
-    if (paymentType === 'installment' && (!instInput.value || parseInt(instInput.value) < 2)) {
-      instInput.setCustomValidity('Informe o número de parcelas (mínimo 2)');
+    if (paymentType === 'installment' && (!instInput?.value || parseInt(instInput.value) < 2)) {
+      instInput?.setCustomValidity('Informe o número de parcelas (mínimo 2)');
       form.reportValidity();
-      instInput.setCustomValidity('');
+      instInput?.setCustomValidity('');
       return;
+    }
+
+    let installmentAmounts = null;
+    if (paymentType === 'installment') {
+      const toggle = document.getElementById('custom-amounts-toggle');
+      if (toggle?.checked) {
+        const inputs = document.querySelectorAll('[data-inst-row]');
+        installmentAmounts = Array.from(inputs).map(inp => parseFloat(inp.value) || 0);
+        if (installmentAmounts.some(a => a <= 0)) {
+          alert('Informe o valor de todas as parcelas.');
+          return;
+        }
+      }
     }
 
     const btn = document.querySelector('#plan-form button:last-of-type');
@@ -279,14 +374,16 @@ const UISimulator = {
 
     try {
       await Storage.addPlanned({
-        description:  form.description.value.trim(),
-        totalAmount:  parseFloat(form.totalAmount.value),
+        description:        form.description.value.trim(),
+        totalAmount:        installmentAmounts
+          ? installmentAmounts.reduce((s, a) => s + a, 0)
+          : parseFloat(form.totalAmount.value),
         paymentType,
-        installments: paymentType === 'installment' ? parseInt(instInput.value) : 1,
-        startDate:    form.startDate.value,
+        installments:       paymentType === 'installment' ? parseInt(instInput.value) : 1,
+        startDate:          form.startDate.value,
+        installmentAmounts,
       });
       Modal.close();
-      // onSnapshot dispara this.render() automaticamente
     } catch (e) {
       console.error(e);
       alert('Erro ao salvar. Verifique sua conexão e tente novamente.');
