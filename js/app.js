@@ -204,7 +204,6 @@ const App = {
       simulator:    ['Simulador de Gastos','Planeje grandes despesas'],
       history:      ['Histórico',          'Todos os meses'],
       investimentos:['Investimentos',      'Controle de aportes'],
-      ai:           ['Análise IA',         'Dicas personalizadas'],
     };
     const [title, subtitle] = meta[page] || ['', ''];
     document.getElementById('page-title').textContent    = title;
@@ -218,7 +217,6 @@ const App = {
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
-      case 'ai':           UIAI.render();                            break;
     }
   },
 
@@ -251,7 +249,6 @@ const App = {
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
-      case 'ai':           UIAI.render();                            break;
     }
   },
 
