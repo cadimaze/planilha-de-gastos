@@ -144,6 +144,21 @@ const UICartoes = {
             </div>
           </div>
           <p class="text-xs text-gray-400 mt-1">Dias de fechamento e vencimento da fatura.</p>
+          <!-- Import rows -->
+          <div class="mt-4">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-gray-600">${card ? 'Adicionar parcelas' : 'Fatura atual e parcelas futuras'} <span class="font-normal text-gray-400">(opcional)</span></label>
+            </div>
+            <p class="text-xs text-gray-400 mb-2">Registre valores já comprometidos neste cartão — fatura atual e parcelamentos futuros.</p>
+            <div id="import-rows" class="space-y-2 mb-2">
+              ${!editId ? this._importRowHTML(0) : ''}
+            </div>
+            <button type="button" onclick="UICartoes._addImportRow()"
+              class="w-full py-2 border-2 border-dashed border-gray-200 text-xs font-semibold text-gray-400 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              Adicionar mês
+            </button>
+          </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-2">Cor do cartão</label>
@@ -187,6 +202,48 @@ const UICartoes = {
       </div>
     `;
     Modal.open();
+  },
+
+  _importRowHTML(monthOffset) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + monthOffset);
+    const month = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return `<div class="import-row flex items-center gap-2">
+      <input type="month" class="import-month flex-1 min-w-0 px-2.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" value="${month}">
+      <div class="flex-1 min-w-0 relative">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+        <input type="number" min="0.01" step="0.01" placeholder="0,00"
+          class="import-amount w-full pl-8 pr-2 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <button type="button" onclick="this.closest('.import-row').remove()"
+        class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 flex-shrink-0 rounded-lg hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  },
+
+  _addImportRow() {
+    const container = document.getElementById('import-rows');
+    if (!container) return;
+    const count = container.querySelectorAll('.import-row').length;
+    const d = new Date();
+    d.setMonth(d.getMonth() + count);
+    const month = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const div = document.createElement('div');
+    div.className = 'import-row flex items-center gap-2';
+    div.innerHTML = `
+      <input type="month" class="import-month flex-1 min-w-0 px-2.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" value="${month}">
+      <div class="flex-1 min-w-0 relative">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+        <input type="number" min="0.01" step="0.01" placeholder="0,00"
+          class="import-amount w-full pl-8 pr-2 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <button type="button" onclick="this.closest('.import-row').remove()"
+        class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 flex-shrink-0 rounded-lg hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
   },
 
   _setType(type) {
@@ -241,8 +298,34 @@ const UICartoes = {
     const btn = document.getElementById('card-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
     try {
-      if (editId) await Storage.updateCartao(editId, data);
-      else        await Storage.addCartao(data);
+      let cardId = editId;
+      if (editId) {
+        await Storage.updateCartao(editId, data);
+      } else {
+        const ref = await Storage.addCartao(data);
+        cardId = ref.id;
+      }
+
+      if (data.type === 'credito') {
+        const rows = document.querySelectorAll('.import-row');
+        const txBatch = [];
+        rows.forEach(row => {
+          const month  = row.querySelector('.import-month')?.value;
+          const amount = parseFloat(row.querySelector('.import-amount')?.value);
+          if (month && amount > 0) {
+            txBatch.push({
+              type:        'expense',
+              description: 'Saldo importado',
+              category:    'Outros',
+              cardId,
+              date:        `${month}-15`,
+              notes:       '',
+            });
+          }
+        });
+        if (txBatch.length > 0) await Storage.addTransactionBatch(txBatch);
+      }
+
       Modal.close();
     } catch (e) {
       console.error(e);
