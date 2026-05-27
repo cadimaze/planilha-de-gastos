@@ -1,6 +1,11 @@
 const Calc = {
-  // Categories that belong to separate wallets (not bank balance)
   VA_VR_CATS: ['Vale Alimentação', 'Vale Refeição', 'Alimentação (VA)', 'Refeição (VR)'],
+
+  INVESTMENT_TYPES: [
+    'Poupança', 'Tesouro Direto', 'Tesouro Selic', 'CDB', 'LCI/LCA',
+    'Fundo Imobiliário', 'Ações', 'ETF', 'Câmbio Internacional',
+    'Criptomoedas', 'Previdência Privada', 'Outros',
+  ],
 
   fmt(value) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -109,10 +114,24 @@ const Calc = {
     return Array.from(set).sort().reverse();
   },
 
-  // Cumulative bank balance from all months up to and including upToMonthKey
-  runningBalance(transactions, upToMonthKey, recorrentes = []) {
+  investimentoSummary(investimentos) {
+    const total = (investimentos || []).reduce((s, i) => s + i.amount, 0);
+    const byType = {};
+    (investimentos || []).forEach(i => { byType[i.type] = (byType[i.type] || 0) + i.amount; });
+    const typeList = Object.entries(byType)
+      .map(([type, amount]) => ({ type, amount }))
+      .sort((a, b) => b.amount - a.amount);
+    return { total, typeList };
+  },
+
+  // Cumulative bank balance minus investments up to and including upToMonthKey
+  runningBalance(transactions, upToMonthKey, recorrentes = [], investimentos = []) {
     const months = this.allMonths(transactions).filter(m => m <= upToMonthKey);
-    return months.reduce((sum, key) => sum + this.bankSummary(transactions, key, recorrentes).balance, 0);
+    const bankBal = months.reduce((sum, key) => sum + this.bankSummary(transactions, key, recorrentes).balance, 0);
+    const invTotal = (investimentos || [])
+      .filter(i => this.monthKey(i.date) <= upToMonthKey)
+      .reduce((s, i) => s + i.amount, 0);
+    return bankBal - invTotal;
   },
 
   // Returns array of { monthKey, amount, installment?, totalInstallments? } for a planned expense

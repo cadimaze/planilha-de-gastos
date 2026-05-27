@@ -8,12 +8,14 @@ const App = {
   transactions:      [],
   planned:           [],
   recorrentes:       [],
+  investimentos:     [],
 
   _initialized: false,
   _loadCount:   0,
   _unsubTx:     null,
   _unsubPl:     null,
   _unsubRec:    null,
+  _unsubInv:    null,
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   init() {
@@ -72,6 +74,7 @@ const App = {
     if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
     if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
     if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
+    if (this._unsubInv) { this._unsubInv(); this._unsubInv = null; }
 
     this.currentPlanilhaId = planilhaId;
     this.currentPlanilha   = this.planilhas.find(p => p.id === planilhaId) || null;
@@ -151,6 +154,15 @@ const App = {
         console.error('recorrentes snapshot:', err);
         if (!this._initialized) onLoad();
       });
+
+    this._unsubInv = db.collection('planilhas').doc(planilhaId)
+      .collection('investimentos').onSnapshot(snap => {
+        this.investimentos = snap.docs.map(doc => {
+          const d = doc.data();
+          return { id: doc.id, type: d.type, description: d.description || '', amount: d.amount, date: d.date, notes: d.notes || '' };
+        });
+        if (this._initialized) this.refresh();
+      }, err => console.error('investimentos snapshot:', err));
   },
 
   _showApp() {
@@ -168,7 +180,8 @@ const App = {
     if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
     if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
     if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
-    this.transactions = []; this.planned = []; this.recorrentes = []; this.planilhas = [];
+    if (this._unsubInv) { this._unsubInv(); this._unsubInv = null; }
+    this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.planilhas = [];
     this.currentPlanilha = null; this.currentPlanilhaId = null;
     this._initialized = false; this._loadCount = 0;
     const loading = document.getElementById('loading');
@@ -190,6 +203,8 @@ const App = {
       transactions: ['Transações',         () => Calc.fmtMonthLong(this.currentMonth)],
       simulator:    ['Simulador de Gastos','Planeje grandes despesas'],
       history:      ['Histórico',          'Todos os meses'],
+      investimentos:['Investimentos',      'Controle de aportes'],
+      ai:           ['Análise IA',         'Dicas personalizadas'],
     };
     const [title, subtitle] = meta[page] || ['', ''];
     document.getElementById('page-title').textContent    = title;
@@ -202,6 +217,8 @@ const App = {
       case 'transactions': UITransactions.render(this.currentMonth); break;
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
+      case 'investimentos':UIInvestimentos.render();                 break;
+      case 'ai':           UIAI.render();                            break;
     }
   },
 
@@ -233,6 +250,8 @@ const App = {
       case 'transactions': UITransactions.render(this.currentMonth); break;
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
+      case 'investimentos':UIInvestimentos.render();                 break;
+      case 'ai':           UIAI.render();                            break;
     }
   },
 

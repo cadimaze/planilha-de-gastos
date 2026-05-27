@@ -63,6 +63,22 @@ const Storage = {
     return this._recRef().doc(id).delete();
   },
 
+  // ── Investimentos ─────────────────────────────────────────────────────────
+  _invRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('investimentos'); },
+  getInvestimentos() { return (typeof App !== 'undefined' && App.investimentos) || []; },
+
+  async addInvestimento(data) {
+    return this._invRef().add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  },
+
+  async updateInvestimento(id, data) {
+    return this._invRef().doc(id).update(data);
+  },
+
+  async deleteInvestimento(id) {
+    return this._invRef().doc(id).delete();
+  },
+
   // ── Planilhas ─────────────────────────────────────────────────────────────
   async getUserPlanilhas() {
     const snap = await db.collection('planilhas')
