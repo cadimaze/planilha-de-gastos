@@ -63,6 +63,22 @@ const Storage = {
     return this._recRef().doc(id).delete();
   },
 
+  // ── Cartões ───────────────────────────────────────────────────────────────
+  _cardRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('cartoes'); },
+  getCartoes() { return (typeof App !== 'undefined' && App.cartoes) || []; },
+
+  async addCartao(data) {
+    return this._cardRef().add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  },
+
+  async updateCartao(id, data) {
+    return this._cardRef().doc(id).update(data);
+  },
+
+  async deleteCartao(id) {
+    return this._cardRef().doc(id).delete();
+  },
+
   // ── Investimentos ─────────────────────────────────────────────────────────
   _invRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('investimentos'); },
   getInvestimentos() { return (typeof App !== 'undefined' && App.investimentos) || []; },

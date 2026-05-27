@@ -1,6 +1,7 @@
 const UITransactions = {
   filter: 'all',
   search: '',
+  _selectedCardId: null,
 
   INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Vale Alimentação', 'Vale Refeição', 'Outros'],
   EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
@@ -84,6 +85,10 @@ const UITransactions = {
               const clickHandler = t.isRecurrent
                 ? `UITransactions.openRecurrentForm('${t.recurrentId}')`
                 : `UITransactions.openForm('${t.type}', '${t.id}')`;
+              const txCard = t.cardId ? Storage.getCartoes().find(c => c.id === t.cardId) : null;
+              const cardBadge = txCard
+                ? `<span class="text-xs font-semibold px-1.5 py-0.5 rounded-md ml-1 text-white" style="background:${txCard.color || '#374151'}">${txCard.name}</span>`
+                : '';
               return `
               <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
                    onclick="${clickHandler}">
@@ -93,7 +98,7 @@ const UITransactions = {
                 <div class="ml-3 flex-1 min-w-0">
                   <div class="flex items-center gap-1 flex-wrap">
                     <p class="text-sm font-medium text-gray-900 truncate">${t.description}</p>
-                    ${instBadge}${recBadge}
+                    ${instBadge}${recBadge}${cardBadge}
                   </div>
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                   ${t.notes ? `<p class="text-xs text-gray-300 truncate">${t.notes}</p>` : ''}
@@ -122,6 +127,7 @@ const UITransactions = {
     const tx    = editId ? Storage.getTransactions().find(t => t.id === editId) : null;
     const cats  = type === 'income' ? this.INCOME_CATS : this.EXPENSE_CATS;
     const today = new Date().toISOString().slice(0, 10);
+    this._selectedCardId = tx?.cardId || null;
 
     document.getElementById('modal-box').innerHTML = `
       <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
@@ -185,6 +191,7 @@ const UITransactions = {
               ${cats.map(c => `<option value="${c}" ${tx?.category===c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
+          ${type === 'expense' ? this._cardChipsHTML() : ''}
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Observações</label>
             <textarea name="notes" rows="2" placeholder="Opcional..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${tx?.notes || ''}</textarea>
@@ -273,6 +280,7 @@ const UITransactions = {
           </div>
         </div>
 
+        ${this._cardChipsHTML('inst')}
         <div class="flex gap-3 pt-1">
           <button type="button" onclick="Modal.close()" class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancelar</button>
           <button type="button" id="inst-submit-btn" onclick="UITransactions.submitInstallment()"
@@ -288,6 +296,44 @@ const UITransactions = {
   },
 
   _instMode: 'equal',
+
+  _cardChipsHTML(prefix) {
+    const cartoes = Storage.getCartoes();
+    if (!cartoes.length) return '';
+    const sel = this._selectedCardId;
+    const none = `<button type="button" onclick="UITransactions._selectCard(null)"
+      class="card-chip flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all"
+      style="${!sel ? 'background:#111827;border-color:#111827;color:white' : 'background:white;border-color:#e5e7eb;color:#4b5563'}"
+      data-card-id="">Sem cartão</button>`;
+    const chips = cartoes.map(c => {
+      const active = sel === c.id;
+      return `<button type="button" onclick="UITransactions._selectCard('${c.id}')"
+        class="card-chip flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all"
+        style="${active ? `background:${c.color||'#374151'};border-color:${c.color||'#374151'};color:white` : 'background:white;border-color:#e5e7eb;color:#4b5563'}"
+        data-card-id="${c.id}"
+        data-card-color="${c.color||'#374151'}">${c.name}</button>`;
+    }).join('');
+    return `<div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1.5">Cartão <span class="font-normal text-gray-400">(opcional)</span></label>
+      <div class="flex gap-2 flex-wrap">${none}${chips}</div>
+    </div>`;
+  },
+
+  _selectCard(id) {
+    this._selectedCardId = id || null;
+    document.querySelectorAll('.card-chip').forEach(btn => {
+      const cid   = btn.dataset.cardId || null;
+      const color = btn.dataset.cardColor;
+      const active = (id && id === cid) || (!id && !cid);
+      if (active) {
+        btn.style.cssText = cid && color
+          ? `background:${color};border-color:${color};color:white`
+          : 'background:#111827;border-color:#111827;color:white';
+      } else {
+        btn.style.cssText = 'background:white;border-color:#e5e7eb;color:#4b5563';
+      }
+    });
+  },
 
   switchTab(tab) {
     const single = document.getElementById('form-single');
@@ -384,6 +430,7 @@ const UITransactions = {
       date:        form.date.value,
       category:    form.category.value,
       notes:       form.notes.value.trim(),
+      cardId:      type === 'expense' ? (this._selectedCardId || null) : null,
     };
     const btn = document.getElementById('tx-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
@@ -431,15 +478,16 @@ const UITransactions = {
       d.setMonth(d.getMonth() + i);
       const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       return {
-        type:             'expense',
-        description:      `${desc} (${i+1}/${n})`,
+        type:              'expense',
+        description:       `${desc} (${i+1}/${n})`,
         amount,
         date,
-        category:         cat,
-        notes:            '',
+        category:          cat,
+        notes:             '',
         groupId,
-        installmentNumber:  i + 1,
-        totalInstallments:  n,
+        cardId:            this._selectedCardId || null,
+        installmentNumber: i + 1,
+        totalInstallments: n,
       };
     });
 

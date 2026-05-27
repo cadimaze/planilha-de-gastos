@@ -9,6 +9,7 @@ const App = {
   planned:           [],
   recorrentes:       [],
   investimentos:     [],
+  cartoes:           [],
 
   _initialized: false,
   _loadCount:   0,
@@ -16,6 +17,7 @@ const App = {
   _unsubPl:     null,
   _unsubRec:    null,
   _unsubInv:    null,
+  _unsubCard:   null,
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   init() {
@@ -71,10 +73,11 @@ const App = {
   },
 
   switchPlanilha(planilhaId) {
-    if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
-    if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
-    if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
-    if (this._unsubInv) { this._unsubInv(); this._unsubInv = null; }
+    if (this._unsubTx)   { this._unsubTx();   this._unsubTx   = null; }
+    if (this._unsubPl)   { this._unsubPl();   this._unsubPl   = null; }
+    if (this._unsubRec)  { this._unsubRec();  this._unsubRec  = null; }
+    if (this._unsubInv)  { this._unsubInv();  this._unsubInv  = null; }
+    if (this._unsubCard) { this._unsubCard(); this._unsubCard = null; }
 
     this.currentPlanilhaId = planilhaId;
     this.currentPlanilha   = this.planilhas.find(p => p.id === planilhaId) || null;
@@ -108,6 +111,7 @@ const App = {
             groupId:           d.groupId           || null,
             installmentNumber: d.installmentNumber || null,
             totalInstallments: d.totalInstallments || null,
+            cardId:            d.cardId            || null,
           };
         });
         if (!this._initialized) onLoad();
@@ -163,6 +167,15 @@ const App = {
         });
         if (this._initialized) this.refresh();
       }, err => console.error('investimentos snapshot:', err));
+
+    this._unsubCard = db.collection('planilhas').doc(planilhaId)
+      .collection('cartoes').onSnapshot(snap => {
+        this.cartoes = snap.docs.map(doc => {
+          const d = doc.data();
+          return { id: doc.id, name: d.name, type: d.type, color: d.color || '#374151', dueDay: d.dueDay || null, closingDay: d.closingDay || null };
+        });
+        if (this._initialized) this.refresh();
+      }, err => console.error('cartoes snapshot:', err));
   },
 
   _showApp() {
@@ -177,11 +190,12 @@ const App = {
   },
 
   _onLogout() {
-    if (this._unsubTx)  { this._unsubTx();  this._unsubTx  = null; }
-    if (this._unsubPl)  { this._unsubPl();  this._unsubPl  = null; }
-    if (this._unsubRec) { this._unsubRec(); this._unsubRec = null; }
-    if (this._unsubInv) { this._unsubInv(); this._unsubInv = null; }
-    this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.planilhas = [];
+    if (this._unsubTx)   { this._unsubTx();   this._unsubTx   = null; }
+    if (this._unsubPl)   { this._unsubPl();   this._unsubPl   = null; }
+    if (this._unsubRec)  { this._unsubRec();  this._unsubRec  = null; }
+    if (this._unsubInv)  { this._unsubInv();  this._unsubInv  = null; }
+    if (this._unsubCard) { this._unsubCard(); this._unsubCard = null; }
+    this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.cartoes = []; this.planilhas = [];
     this.currentPlanilha = null; this.currentPlanilhaId = null;
     this._initialized = false; this._loadCount = 0;
     const loading = document.getElementById('loading');
@@ -204,6 +218,7 @@ const App = {
       simulator:    ['Simulador de Gastos','Planeje grandes despesas'],
       history:      ['Histórico',          'Todos os meses'],
       investimentos:['Investimentos',      'Controle de aportes'],
+      cartoes:      ['Cartões',            'Gerencie seus cartões'],
     };
     const [title, subtitle] = meta[page] || ['', ''];
     document.getElementById('page-title').textContent    = title;
@@ -217,6 +232,7 @@ const App = {
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
+      case 'cartoes':      UICartoes.render();                       break;
     }
   },
 
@@ -249,6 +265,7 @@ const App = {
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
+      case 'cartoes':      UICartoes.render();                       break;
     }
   },
 

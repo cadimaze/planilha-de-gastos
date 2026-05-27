@@ -114,6 +114,43 @@ const Calc = {
     return Array.from(set).sort().reverse();
   },
 
+  // Returns { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' } for a card's current billing period
+  billingPeriod(card) {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+    const pad = n => String(n).padStart(2, '0');
+    const fmt = dt => `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+
+    if (!card.closingDay) {
+      return {
+        from: `${y}-${pad(m+1)}-01`,
+        to:   fmt(new Date(y, m+1, 0)),
+      };
+    }
+    const cd = card.closingDay;
+    if (d <= cd) {
+      return { from: fmt(new Date(y, m-1, cd+1)), to: fmt(new Date(y, m, cd)) };
+    }
+    return { from: fmt(new Date(y, m, cd+1)), to: fmt(new Date(y, m+1, cd)) };
+  },
+
+  faturaAtual(transactions, card) {
+    if (card.type !== 'credito') return null;
+    const { from, to } = this.billingPeriod(card);
+    return transactions
+      .filter(t => t.cardId === card.id && t.type === 'expense' && t.date >= from && t.date <= to)
+      .reduce((s, t) => s + t.amount, 0);
+  },
+
+  diasAteVencimento(dueDay) {
+    if (!dueDay) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const y = today.getFullYear(), m = today.getMonth();
+    let due = new Date(y, m, dueDay);
+    if (due <= today) due = new Date(y, m+1, dueDay);
+    return Math.ceil((due - today) / 86400000);
+  },
+
   investimentoSummary(investimentos) {
     const total = (investimentos || []).reduce((s, i) => s + i.amount, 0);
     const byType = {};

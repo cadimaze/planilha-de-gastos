@@ -3,6 +3,7 @@ const UIDashboard = {
     const txAll    = Storage.getTransactions();
     const recAll   = Storage.getRecurrentes();
     const invAll   = Storage.getInvestimentos();
+    const cartoes  = Storage.getCartoes();
     const planned  = Storage.getPlanned();
     const s          = Calc.bankSummary(txAll, monthKey, recAll);
     const wallet     = Calc.walletSummary(txAll, monthKey, recAll);
@@ -148,6 +149,38 @@ const UIDashboard = {
           ${invSummary.typeList.length > 4 ? `<span class="text-xs text-gray-400">+${invSummary.typeList.length - 4}</span>` : ''}
         </div>
         ` : ''}
+      </div>
+      ` : ''}
+
+      ${cartoes.filter(c => c.type === 'credito').length > 0 ? `
+      <!-- Credit Cards -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+          <p class="text-sm font-semibold text-gray-700">Cartões de crédito</p>
+          <button onclick="navigateTo('cartoes')" class="text-xs text-indigo-600 font-semibold hover:text-indigo-800">
+            Gerenciar →
+          </button>
+        </div>
+        <div class="divide-y divide-gray-50">
+          ${cartoes.filter(c => c.type === 'credito').map(card => {
+            const fatura = Calc.faturaAtual(txAll, card) || 0;
+            const dias   = Calc.diasAteVencimento(card.dueDay);
+            const diasLabel = dias === null ? '' : dias === 0 ? 'Hoje' : dias === 1 ? 'Amanhã' : `em ${dias} dias`;
+            const diasColor = dias !== null && dias <= 3 ? 'text-red-500' : dias !== null && dias <= 7 ? 'text-amber-500' : 'text-gray-400';
+            return `
+            <div class="flex items-center gap-3 px-4 py-3">
+              <div class="w-9 h-9 rounded-xl flex-shrink-0" style="background:${card.color || '#374151'}"></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-900">${card.name}</p>
+                ${card.dueDay ? `<p class="text-xs ${diasColor} font-medium">Vence dia ${card.dueDay}${dias !== null ? ' · ' + diasLabel : ''}</p>` : '<p class="text-xs text-gray-400">Sem vencimento</p>'}
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-bold text-gray-900">${Calc.fmt(fatura)}</p>
+                <p class="text-xs text-gray-400">fatura</p>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>
       ` : ''}
 

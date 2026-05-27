@@ -136,6 +136,12 @@
             </svg>
             Investimentos
           </button>
+          <button onclick="navigateTo('cartoes')" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all text-gray-600 hover:bg-gray-50" data-page="cartoes">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            Cartões
+          </button>
         </nav>
 
         <div class="px-4 py-4 border-t border-gray-100 space-y-3">
@@ -257,6 +263,12 @@
           </svg>
           <span class="text-[9px] font-medium">Aportes</span>
         </button>
+        <button onclick="navigateTo('cartoes')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="cartoes">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+          <span class="text-[9px] font-medium">Cartões</span>
+        </button>
       </div>
     </nav>
   </div>
@@ -281,6 +293,7 @@
 <script src="js/ui-history.js"></script>
 <script src="js/ui-planilhas.js"></script>
 <script src="js/ui-investimentos.js"></script>
+<script src="js/ui-cartoes.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
