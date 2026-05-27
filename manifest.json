@@ -1,12 +1,12 @@
 {
-  "name": "Planilha de Gastos",
-  "short_name": "Planilha",
-  "description": "Controle financeiro familiar",
+  "name": "Hive",
+  "short_name": "Hive",
+  "description": "Controle financeiro pessoal",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "theme_color": "#F59E0B",
   "icons": [
     {
       "src": "icon.png",

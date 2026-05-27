@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Planilha de Gastos</title>
+  <title>Hive</title>
 
   <!-- Favicon (guia do navegador) -->
   <link rel="icon" type="image/png" href="icon.png">
@@ -12,14 +12,14 @@
   <!-- PWA + iOS Home Screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Planilha">
+  <meta name="apple-mobile-web-app-title" content="Hive">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="apple-touch-icon" sizes="120x120" href="icon.png">
   <link rel="apple-touch-icon" sizes="152x152" href="icon.png">
   <link rel="apple-touch-icon" sizes="167x167" href="icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#F59E0B">
   <meta name="mobile-web-app-capable" content="yes">
   <!-- Firebase (compat — funciona sem build/npm) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -31,14 +31,17 @@
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          fontFamily: {
+            sans:   ['Inter', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          },
         }
       }
     }
@@ -48,17 +51,13 @@
 <div id="app" class="h-full">
 
   <!-- Login Screen -->
-  <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center z-50 p-6">
+  <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-amber-50 to-white flex items-center justify-center z-50 p-6">
     <div class="w-full max-w-sm text-center">
-      <div class="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-      </div>
-      <h1 class="text-2xl font-bold text-gray-900 mb-1">Planilha de Gastos</h1>
-      <p class="text-sm text-gray-500 mb-8">Controle financeiro familiar</p>
+      <img src="icon.png" class="w-20 h-20 rounded-3xl mx-auto mb-5 shadow-lg object-cover">
+      <h1 class="font-outfit text-4xl font-bold text-amber-500 mb-1">Hive</h1>
+      <p class="text-sm text-gray-500 mb-8">Controle financeiro pessoal</p>
       <button id="btn-google-login" onclick="App.signIn()"
-        class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl py-3.5 text-sm font-semibold hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm disabled:opacity-60">
+        class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl py-3.5 text-sm font-semibold hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm disabled:opacity-60">
         <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -94,13 +93,9 @@
       <!-- Sidebar (desktop) -->
       <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-100 shadow-sm z-10">
         <div class="flex items-center px-5 py-5 border-b border-gray-100">
-          <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center mr-3">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
+          <img src="icon.png" class="w-9 h-9 rounded-xl mr-3 object-cover flex-shrink-0">
           <div>
-            <h1 class="text-sm font-bold text-gray-900 leading-tight">Planilha de Gastos</h1>
+            <h1 class="font-outfit text-lg font-bold text-amber-500 leading-tight">Hive</h1>
             <p class="text-xs text-gray-400">Controle financeiro</p>
           </div>
         </div>
@@ -148,8 +143,8 @@
           <!-- Planilha ativa -->
           <button onclick="UIPlanilhas.showManage()"
             class="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-gray-50 rounded-xl transition-colors text-left">
-            <div class="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
               </svg>
             </div>
@@ -168,7 +163,7 @@
               <p id="user-name" class="text-xs font-semibold text-gray-700 truncate"></p>
             </div>
             <button onclick="Theme.toggle()" title="Alternar tema"
-              class="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0">
+              class="p-1.5 text-gray-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors flex-shrink-0">
               <!-- Moon (shown in light mode) -->
               <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -201,7 +196,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button onclick="Theme.toggle()" title="Alternar tema"
-              class="lg:hidden p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
+              class="lg:hidden p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
               <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
@@ -211,14 +206,14 @@
             </button>
             <button onclick="UIPlanilhas.showManage()"
               class="lg:hidden flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors max-w-[120px]">
-              <svg class="w-3.5 h-3.5 flex-shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
               </svg>
               <span data-planilha-name class="truncate font-medium"></span>
             </button>
             <div id="month-selector-wrap">
               <select id="month-selector" onchange="App.changeMonth(this.value)"
-                class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
               </select>
             </div>
           </div>
@@ -287,7 +282,7 @@
         </button>
       </div>
       <button id="fab-btn" onclick="FAB.toggle()"
-        class="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all">
+        class="w-14 h-14 bg-amber-500 text-white rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-all">
         <svg id="fab-icon" class="w-6 h-6 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
