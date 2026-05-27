@@ -91,6 +91,11 @@ const UICartoes = {
     const card     = editId ? Storage.getCartoes().find(c => c.id === editId) : null;
     const selColor = card?.color || '#374151';
     const selType  = card?.type  || 'credito';
+    const importedTx = editId
+      ? Storage.getTransactions()
+          .filter(t => t.cardId === editId && t.description === 'Saldo importado')
+          .sort((a, b) => a.date.localeCompare(b.date))
+      : [];
 
     document.getElementById('modal-box').innerHTML = `
       <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
@@ -147,11 +152,16 @@ const UICartoes = {
           <!-- Import rows -->
           <div class="mt-4">
             <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-semibold text-gray-600">${card ? 'Adicionar parcelas' : 'Fatura atual e parcelas futuras'} <span class="font-normal text-gray-400">(opcional)</span></label>
+              <label class="text-xs font-semibold text-gray-600">
+                ${editId ? `Faturas cadastradas${importedTx.length > 0 ? ` (${importedTx.length})` : ''}` : 'Fatura atual e parcelas futuras'}
+                <span class="font-normal text-gray-400">(opcional)</span>
+              </label>
             </div>
-            <p class="text-xs text-gray-400 mb-2">Registre valores já comprometidos neste cartão — fatura atual e parcelamentos futuros.</p>
+            <p class="text-xs text-gray-400 mb-2">Registre valores já comprometidos — fatura atual e parcelamentos futuros. Edite ou remova os existentes.</p>
             <div id="import-rows" class="space-y-2 mb-2">
-              ${!editId ? this._importRowHTML(0) : ''}
+              ${editId
+                ? importedTx.map(t => this._importRowHTMLFromTx(t)).join('')
+                : this._importRowHTML(0)}
             </div>
             <button type="button" onclick="UICartoes._addImportRow()"
               class="w-full py-2 border-2 border-dashed border-gray-200 text-xs font-semibold text-gray-400 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors">
@@ -202,6 +212,23 @@ const UICartoes = {
       </div>
     `;
     Modal.open();
+  },
+
+  _importRowHTMLFromTx(tx) {
+    const month = tx.date.slice(0, 7);
+    return `<div class="import-row flex items-center gap-2">
+      <input type="month" class="import-month flex-1 min-w-0 px-2.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" value="${month}">
+      <div class="flex-1 min-w-0 relative">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+        <input type="number" min="0.01" step="0.01" placeholder="0,00"
+          value="${tx.amount || ''}"
+          class="import-amount w-full pl-8 pr-2 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <button type="button" onclick="this.closest('.import-row').remove()"
+        class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 flex-shrink-0 rounded-lg hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`;
   },
 
   _importRowHTML(monthOffset) {
@@ -307,6 +334,8 @@ const UICartoes = {
       }
 
       if (data.type === 'credito') {
+        await Storage.deleteCardImports(cardId);
+
         const rows = document.querySelectorAll('.import-row');
         const txBatch = [];
         const now = new Date();
@@ -316,8 +345,6 @@ const UICartoes = {
           const month  = row.querySelector('.import-month')?.value;
           const amount = parseFloat(row.querySelector('.import-amount')?.value);
           if (month && amount > 0) {
-            // Current month: use today so it falls in the active billing period.
-            // Future/past months: use 1st — always within the billing period since closingDay >= 1.
             const date = month === curMonth ? todayStr : `${month}-01`;
             txBatch.push({
               type:        'expense',

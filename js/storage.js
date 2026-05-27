@@ -79,6 +79,15 @@ const Storage = {
     return this._cardRef().doc(id).delete();
   },
 
+  async deleteCardImports(cardId) {
+    const imports = this.getTransactions()
+      .filter(t => t.cardId === cardId && t.description === 'Saldo importado');
+    if (!imports.length) return;
+    const batch = db.batch();
+    imports.forEach(t => batch.delete(this._txRef().doc(t.id)));
+    return batch.commit();
+  },
+
   // ── Investimentos ─────────────────────────────────────────────────────────
   _invRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('investimentos'); },
   getInvestimentos() { return (typeof App !== 'undefined' && App.investimentos) || []; },
