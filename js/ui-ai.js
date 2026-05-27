@@ -152,7 +152,7 @@ const UIAI = {
 
     try {
       const prompt = this._buildPrompt();
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -163,14 +163,16 @@ const UIAI = {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        if (response.status === 400) throw new Error('Chave de API inválida ou projeto sem permissão. Verifique no Google AI Studio.');
-        if (response.status === 429) throw new Error('Limite de requisições atingido. Aguarde um minuto e tente novamente.');
-        throw new Error(err.error?.message || `Erro HTTP ${response.status}`);
+        const msg = data?.error?.message || '';
+        if (response.status === 400) throw new Error(`Chave inválida ou modelo indisponível. ${msg}`);
+        if (response.status === 401 || response.status === 403) throw new Error(`Sem permissão. Verifique se a chave está correta no Google AI Studio. ${msg}`);
+        if (response.status === 429) throw new Error(`Cota excedida. Aguarde alguns segundos e tente novamente. ${msg}`);
+        throw new Error(msg || `Erro HTTP ${response.status}`);
       }
 
-      const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhuma resposta recebida.';
 
       if (res) res.innerHTML = `
