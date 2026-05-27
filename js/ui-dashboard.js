@@ -2,10 +2,12 @@ const UIDashboard = {
   render(monthKey) {
     const txAll    = Storage.getTransactions();
     const recAll   = Storage.getRecurrentes();
+    const invAll   = Storage.getInvestimentos();
     const planned  = Storage.getPlanned();
     const s          = Calc.bankSummary(txAll, monthKey, recAll);
     const wallet     = Calc.walletSummary(txAll, monthKey, recAll);
-    const runningBal = Calc.runningBalance(txAll, monthKey, recAll);
+    const invSummary = Calc.investimentoSummary(invAll);
+    const runningBal = Calc.runningBalance(txAll, monthKey, recAll, invAll);
     const prevBal    = runningBal - s.balance;
     const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
     const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
@@ -112,6 +114,38 @@ const UIDashboard = {
             <span>Recebido: <span class="font-semibold text-green-600">+${Calc.fmt(wallet.vr.income)}</span></span>
             <span>Usado: <span class="font-semibold text-red-500">−${Calc.fmt(wallet.vr.expenses)}</span></span>
           </div>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+
+      ${invSummary.total > 0 ? `
+      <!-- Investment Summary Card -->
+      <div class="bg-white rounded-2xl p-4 border border-indigo-100 shadow-sm mb-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Patrimônio investido</p>
+              <p class="text-lg font-bold text-indigo-600">${Calc.fmt(invSummary.total)}</p>
+            </div>
+          </div>
+          <button onclick="navigateTo('investimentos')" class="text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+            Ver aportes →
+          </button>
+        </div>
+        ${invSummary.typeList.length > 1 ? `
+        <div class="flex flex-wrap gap-1.5 mt-3">
+          ${invSummary.typeList.slice(0, 4).map(t => {
+            const col = UIInvestimentos._typeColor(t.type);
+            const pct = Math.round((t.amount / invSummary.total) * 100);
+            return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${col.bg} ${col.text}">${t.type} <span class="opacity-60">${pct}%</span></span>`;
+          }).join('')}
+          ${invSummary.typeList.length > 4 ? `<span class="text-xs text-gray-400">+${invSummary.typeList.length - 4}</span>` : ''}
         </div>
         ` : ''}
       </div>

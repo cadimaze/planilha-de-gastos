@@ -130,6 +130,18 @@
             </svg>
             Histórico
           </button>
+          <button onclick="navigateTo('investimentos')" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all text-gray-600 hover:bg-gray-50" data-page="investimentos">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            Investimentos
+          </button>
+          <button onclick="navigateTo('ai')" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all text-gray-600 hover:bg-gray-50" data-page="ai">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            Análise IA
+          </button>
         </nav>
 
         <div class="px-4 py-4 border-t border-gray-100 space-y-3">
@@ -220,30 +232,42 @@
 
     <!-- Bottom Nav (mobile only) -->
     <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-20 safe-area-bottom">
-      <div class="flex">
-        <button onclick="navigateTo('dashboard')" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="dashboard">
+      <div class="flex overflow-x-auto" style="-ms-overflow-style:none;scrollbar-width:none">
+        <button onclick="navigateTo('dashboard')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="dashboard">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
           </svg>
-          <span class="text-[10px] font-medium">Dashboard</span>
+          <span class="text-[9px] font-medium">Início</span>
         </button>
-        <button onclick="navigateTo('transactions')" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="transactions">
+        <button onclick="navigateTo('transactions')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="transactions">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
           </svg>
-          <span class="text-[10px] font-medium">Transações</span>
+          <span class="text-[9px] font-medium">Transações</span>
         </button>
-        <button onclick="navigateTo('simulator')" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="simulator">
+        <button onclick="navigateTo('simulator')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="simulator">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
-          <span class="text-[10px] font-medium">Simulador</span>
+          <span class="text-[9px] font-medium">Simulador</span>
         </button>
-        <button onclick="navigateTo('history')" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="history">
+        <button onclick="navigateTo('history')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="history">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
-          <span class="text-[10px] font-medium">Histórico</span>
+          <span class="text-[9px] font-medium">Histórico</span>
+        </button>
+        <button onclick="navigateTo('investimentos')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="investimentos">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+          <span class="text-[9px] font-medium">Aportes</span>
+        </button>
+        <button onclick="navigateTo('ai')" class="mobile-nav-btn flex-shrink-0 w-16 flex flex-col items-center gap-0.5 py-2.5 text-gray-400 transition-colors" data-page="ai">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          <span class="text-[9px] font-medium">Análise IA</span>
         </button>
       </div>
     </nav>
@@ -268,6 +292,8 @@
 <script src="js/ui-simulator.js"></script>
 <script src="js/ui-history.js"></script>
 <script src="js/ui-planilhas.js"></script>
+<script src="js/ui-investimentos.js"></script>
+<script src="js/ui-ai.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
