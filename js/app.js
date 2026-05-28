@@ -22,6 +22,12 @@ const App = {
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   init() {
+    auth.getRedirectResult().catch(e => {
+      if (e.code !== 'auth/no-auth-event') {
+        console.error('redirect login error:', e);
+        alert('Erro ao fazer login: ' + (e.message || e));
+      }
+    });
     auth.onAuthStateChanged(user => {
       if (user) { this.currentUser = user; this._onLogin(); }
       else       { this.currentUser = null; this._onLogout(); }
@@ -29,11 +35,18 @@ const App = {
   },
 
   // ── Auth ──────────────────────────────────────────────────────────────────
+  _isMobile() { return /android|iphone|ipad|ipod/i.test(navigator.userAgent); },
+
   async signIn() {
     const btn = document.getElementById('btn-google-login');
     if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      if (this._isMobile()) {
+        await auth.signInWithRedirect(provider);
+      } else {
+        await auth.signInWithPopup(provider);
+      }
     } catch (e) {
       console.error(e);
       alert('Erro ao fazer login: ' + (e.message || e));
