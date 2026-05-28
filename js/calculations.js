@@ -42,17 +42,22 @@ const Calc = {
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
   },
 
-  txForMonth(transactions, key) {
-    return transactions.filter(t => this.monthKey(t.date) === key);
+  txForMonth(transactions, key, dayFilter = null) {
+    return transactions.filter(t => {
+      if (this.monthKey(t.date) !== key) return false;
+      if (dayFilter !== null) return parseInt(t.date.slice(8, 10)) <= dayFilter;
+      return true;
+    });
   },
 
   // Generates virtual transaction objects for active recurrents in a given month
-  recurrentForMonth(recorrentes, key) {
+  recurrentForMonth(recorrentes, key, dayFilter = null) {
     if (!recorrentes || !recorrentes.length) return [];
     const [y, m] = key.split('-').map(Number);
     const lastDay = new Date(y, m, 0).getDate();
     return recorrentes
       .filter(r => r.active !== false && (!r.startDate || r.startDate <= key))
+      .filter(r => dayFilter === null || (r.day || 1) <= dayFilter)
       .map(r => ({
         id:           `rec_${r.id}`,
         type:         r.type,
@@ -67,10 +72,10 @@ const Calc = {
   },
 
   // Full summary including recurrents (all wallets)
-  summary(transactions, key, recorrentes = []) {
+  summary(transactions, key, recorrentes = [], dayFilter = null) {
     const tx = [
-      ...this.txForMonth(transactions, key),
-      ...this.recurrentForMonth(recorrentes, key),
+      ...this.txForMonth(transactions, key, dayFilter),
+      ...this.recurrentForMonth(recorrentes, key, dayFilter),
     ];
     const income   = tx.filter(t => t.type === 'income').reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
     const expenses = tx.filter(t => t.type === 'expense').reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
@@ -78,8 +83,8 @@ const Calc = {
   },
 
   // Bank-only summary — excludes VA/VR categories
-  bankSummary(transactions, key, recorrentes = []) {
-    const s = this.summary(transactions, key, recorrentes);
+  bankSummary(transactions, key, recorrentes = [], dayFilter = null) {
+    const s = this.summary(transactions, key, recorrentes, dayFilter);
     const tx = s.tx.filter(t => !this.VA_VR_CATS.includes(t.category));
     const income   = tx.filter(t => t.type === 'income').reduce((acc, t) => acc + this.toBRL(t.amount, t.currency), 0);
     const expenses = tx.filter(t => t.type === 'expense').reduce((acc, t) => acc + this.toBRL(t.amount, t.currency), 0);
@@ -87,10 +92,10 @@ const Calc = {
   },
 
   // VA and VR wallet balances
-  walletSummary(transactions, key, recorrentes = []) {
+  walletSummary(transactions, key, recorrentes = [], dayFilter = null) {
     const allTx = [
-      ...this.txForMonth(transactions, key),
-      ...this.recurrentForMonth(recorrentes, key),
+      ...this.txForMonth(transactions, key, dayFilter),
+      ...this.recurrentForMonth(recorrentes, key, dayFilter),
     ];
     const wallet = (inCats, outCats) => {
       const inc = allTx.filter(t => inCats.includes(t.category)).reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
@@ -103,11 +108,11 @@ const Calc = {
     };
   },
 
-  categoryTotals(transactions, key, type, recorrentes = []) {
+  categoryTotals(transactions, key, type, recorrentes = [], dayFilter = null) {
     const map = {};
     [
-      ...this.txForMonth(transactions, key),
-      ...this.recurrentForMonth(recorrentes, key),
+      ...this.txForMonth(transactions, key, dayFilter),
+      ...this.recurrentForMonth(recorrentes, key, dayFilter),
     ]
       .filter(t => t.type === type)
       .forEach(t => { map[t.category] = (map[t.category] || 0) + this.toBRL(t.amount, t.currency); });
@@ -170,9 +175,12 @@ const Calc = {
   },
 
   // Cumulative bank balance minus investments up to and including upToMonthKey
-  runningBalance(transactions, upToMonthKey, recorrentes = [], investimentos = []) {
+  runningBalance(transactions, upToMonthKey, recorrentes = [], investimentos = [], dayFilter = null) {
     const months = this.allMonths(transactions).filter(m => m <= upToMonthKey);
-    const bankBal = months.reduce((sum, key) => sum + this.bankSummary(transactions, key, recorrentes).balance, 0);
+    const bankBal = months.reduce((sum, key) => {
+      const df = key === upToMonthKey ? dayFilter : null;
+      return sum + this.bankSummary(transactions, key, recorrentes, df).balance;
+    }, 0);
     const invTotal = (investimentos || [])
       .filter(i => this.monthKey(i.date) <= upToMonthKey)
       .reduce((s, i) => s + this.toBRL(i.amount, i.currency), 0);

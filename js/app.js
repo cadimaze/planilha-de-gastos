@@ -1,6 +1,7 @@
 const App = {
   currentPage:       'dashboard',
   currentMonth:      '',
+  currentDayFilter:  null,
   currentUser:       null,
   currentPlanilha:   null,
   currentPlanilhaId: null,
@@ -234,8 +235,8 @@ const App = {
       ['dashboard', 'transactions'].includes(page) ? '' : 'none';
 
     switch (page) {
-      case 'dashboard':    UIDashboard.render(this.currentMonth);    break;
-      case 'transactions': UITransactions.render(this.currentMonth); break;
+      case 'dashboard':    UIDashboard.render(this.currentMonth, this.currentDayFilter);    break;
+      case 'transactions': UITransactions.render(this.currentMonth, this.currentDayFilter); break;
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
@@ -245,11 +246,24 @@ const App = {
 
   changeMonth(key) {
     this.currentMonth = key;
+    this.currentDayFilter = null;
+    const inp = document.getElementById('day-filter-input');
+    if (inp) inp.value = '';
     Charts.destroyAll();
     this._updateSidebarMonth();
     document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
-    if (this.currentPage === 'dashboard')    UIDashboard.render(key);
-    if (this.currentPage === 'transactions') UITransactions.render(key);
+    if (this.currentPage === 'dashboard')    UIDashboard.render(key, null);
+    if (this.currentPage === 'transactions') UITransactions.render(key, null);
+  },
+
+  setDayFilter(val) {
+    const n = parseInt(val);
+    this.currentDayFilter = (!val || isNaN(n)) ? null : Math.min(31, Math.max(1, n));
+    const inp = document.getElementById('day-filter-input');
+    if (inp) inp.style.borderColor = this.currentDayFilter ? '#f59e0b' : '';
+    Charts.destroyAll();
+    if (this.currentPage === 'dashboard')    UIDashboard.render(this.currentMonth, this.currentDayFilter);
+    if (this.currentPage === 'transactions') UITransactions.render(this.currentMonth, this.currentDayFilter);
   },
 
   goToMonth(date) {
@@ -267,8 +281,8 @@ const App = {
     this._buildMonthSelector();
     Charts.destroyAll();
     switch (this.currentPage) {
-      case 'dashboard':    UIDashboard.render(this.currentMonth);    break;
-      case 'transactions': UITransactions.render(this.currentMonth); break;
+      case 'dashboard':    UIDashboard.render(this.currentMonth, this.currentDayFilter);    break;
+      case 'transactions': UITransactions.render(this.currentMonth, this.currentDayFilter); break;
       case 'simulator':    UISimulator.render();                     break;
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;

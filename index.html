@@ -211,10 +211,16 @@
               </svg>
               <span data-planilha-name class="truncate font-medium"></span>
             </button>
-            <div id="month-selector-wrap">
+            <div id="month-selector-wrap" class="flex items-center gap-1.5">
               <select id="month-selector" onchange="App.changeMonth(this.value)"
                 class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
               </select>
+              <input id="day-filter-input" type="number" min="1" max="31"
+                placeholder="dia"
+                title="Ver saldo até o dia X do mês"
+                oninput="App.setDayFilter(this.value)"
+                class="w-14 text-xs text-center border border-gray-200 rounded-lg px-1.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-300"
+                style="-moz-appearance:textfield">
             </div>
           </div>
         </header>

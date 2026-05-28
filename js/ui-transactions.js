@@ -8,19 +8,19 @@ const UITransactions = {
   EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
 
   // ── Lista ─────────────────────────────────────────────────────────────────
-  render(monthKey) {
+  render(monthKey, dayFilter = null) {
     const txAll  = Storage.getTransactions();
     const recAll = Storage.getRecurrentes();
-    const recTx  = Calc.recurrentForMonth(recAll, monthKey);
+    const recTx  = Calc.recurrentForMonth(recAll, monthKey, dayFilter);
 
-    let tx = [...Calc.txForMonth(txAll, monthKey), ...recTx]
+    let tx = [...Calc.txForMonth(txAll, monthKey, dayFilter), ...recTx]
       .sort((a, b) => b.date.localeCompare(a.date));
     if (this.filter !== 'all') tx = tx.filter(t => t.type === this.filter);
     if (this.search) {
       const q = this.search.toLowerCase();
       tx = tx.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
     }
-    const allReal  = Calc.txForMonth(txAll, monthKey);
+    const allReal  = Calc.txForMonth(txAll, monthKey, dayFilter);
     const allMerge = [...allReal, ...recTx];
     const incCount = allMerge.filter(t => t.type === 'income').length;
     const expCount = allMerge.filter(t => t.type === 'expense').length;
@@ -123,8 +123,8 @@ const UITransactions = {
     `;
   },
 
-  setFilter(f) { this.filter = f; this.render(App.currentMonth); },
-  setSearch(v) { this.search = v; this.render(App.currentMonth); },
+  setFilter(f) { this.filter = f; this.render(App.currentMonth, App.currentDayFilter); },
+  setSearch(v) { this.search = v; this.render(App.currentMonth, App.currentDayFilter); },
 
   // ── Formulário ────────────────────────────────────────────────────────────
   openForm(type, editId) {

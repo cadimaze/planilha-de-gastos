@@ -1,18 +1,18 @@
 const UIDashboard = {
-  render(monthKey) {
+  render(monthKey, dayFilter = null) {
     const txAll    = Storage.getTransactions();
     const recAll   = Storage.getRecurrentes();
     const invAll   = Storage.getInvestimentos();
     const cartoes  = Storage.getCartoes();
     const planned  = Storage.getPlanned();
-    const s          = Calc.bankSummary(txAll, monthKey, recAll);
-    const wallet     = Calc.walletSummary(txAll, monthKey, recAll);
+    const s          = Calc.bankSummary(txAll, monthKey, recAll, dayFilter);
+    const wallet     = Calc.walletSummary(txAll, monthKey, recAll, dayFilter);
     const invSummary = Calc.investimentoSummary(invAll);
-    const runningBal = Calc.runningBalance(txAll, monthKey, recAll, invAll);
+    const runningBal = Calc.runningBalance(txAll, monthKey, recAll, invAll, dayFilter);
     const prevBal    = runningBal - s.balance;
-    const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
-    const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll).filter(c => !Calc.VA_VR_CATS.includes(c.category));
-    const recent   = [...Calc.summary(txAll, monthKey, recAll).tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+    const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll, dayFilter).filter(c => !Calc.VA_VR_CATS.includes(c.category));
+    const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll, dayFilter).filter(c => !Calc.VA_VR_CATS.includes(c.category));
+    const recent   = [...Calc.summary(txAll, monthKey, recAll, dayFilter).tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
     const pByMonth = Calc.plannedByMonth(planned);
     const pImpact  = pByMonth[monthKey] || [];
     const pTotal   = pImpact.reduce((a, x) => a + x.amount, 0);
