@@ -48,7 +48,7 @@ const UICartoes = {
                 <div class="p-4 relative" style="background: ${card.color || '#374151'}">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-white font-bold text-base leading-tight">${card.name}</p>
+                      <p class="text-white font-bold text-base leading-tight">${_esc(card.name)}</p>
                       <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white/90">
                         ${card.type === 'credito' ? 'Crédito' : 'Débito'}
                       </span>
@@ -115,7 +115,7 @@ const UICartoes = {
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Nome do cartão *</label>
           <input id="card-name" type="text" autocomplete="off" placeholder="Ex: Nubank, Itaú Visa..."
-            value="${card?.name || ''}"
+            value="${_esc(card?.name || '')}"
             oninput="document.getElementById('card-preview-name').textContent = this.value || 'Nome do cartão'"
             class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
@@ -187,7 +187,7 @@ const UICartoes = {
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pré-visualização</label>
           <div id="card-preview" class="rounded-xl p-4 flex items-center justify-between" style="background:${selColor}">
             <div>
-              <p id="card-preview-name" class="text-white font-bold text-sm">${card?.name || 'Nome do cartão'}</p>
+              <p id="card-preview-name" class="text-white font-bold text-sm">${_esc(card?.name || 'Nome do cartão')}</p>
               <span id="card-preview-type" class="inline-block mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white/90">
                 ${selType === 'credito' ? 'Crédito' : 'Débito'}
               </span>

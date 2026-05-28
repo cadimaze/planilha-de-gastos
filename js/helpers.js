@@ -1,3 +1,8 @@
+// Escape HTML to prevent XSS when rendering user-supplied strings via innerHTML
+function _esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // Category icons (returns SVG string)
 function categoryIcon(category, type, sm) {
   const sz = sm ? 'w-3.5 h-3.5' : 'w-4 h-4';

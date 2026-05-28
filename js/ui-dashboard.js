@@ -171,7 +171,7 @@ const UIDashboard = {
             <div class="flex items-center gap-3 px-4 py-3">
               <div class="w-9 h-9 rounded-xl flex-shrink-0" style="background:${card.color || '#374151'}"></div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-900">${card.name}</p>
+                <p class="text-sm font-semibold text-gray-900">${_esc(card.name)}</p>
                 ${card.dueDay ? `<p class="text-xs ${diasColor} font-medium">Vence dia ${card.dueDay}${dias !== null ? ' · ' + diasLabel : ''}</p>` : '<p class="text-xs text-gray-400">Sem vencimento</p>'}
               </div>
               <div class="text-right">
@@ -300,7 +300,7 @@ const UIDashboard = {
                   ${categoryIcon(t.category, t.type)}
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 truncate">${t.description}</p>
+                  <p class="text-sm font-medium text-gray-900 truncate">${_esc(t.description)}</p>
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                 </div>
                 <p class="text-sm font-bold ml-2 flex-shrink-0 ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">

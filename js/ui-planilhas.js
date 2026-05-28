@@ -86,7 +86,7 @@ const UIPlanilhas = {
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Nome</label>
           <div class="flex gap-2">
-            <input id="pm-name" value="${p.name}"
+            <input id="pm-name" value="${_esc(p.name)}"
               class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <button onclick="UIPlanilhas.rename()"
               class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700">
@@ -116,10 +116,10 @@ const UIPlanilhas = {
             ${members.map(([uid, m]) => `
               <div class="flex items-center gap-2.5 px-3 py-2.5 bg-gray-50 rounded-xl">
                 <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <span class="text-xs font-bold text-indigo-600">${(m.displayName || m.email)[0].toUpperCase()}</span>
+                  <span class="text-xs font-bold text-indigo-600">${_esc((m.displayName || m.email)[0].toUpperCase())}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-800 truncate">${m.displayName || m.email}</p>
+                  <p class="text-sm font-medium text-gray-800 truncate">${_esc(m.displayName || m.email)}</p>
                   <p class="text-xs text-gray-400">${m.role === 'owner' ? 'Dono' : 'Editor'}</p>
                 </div>
                 ${isOwner && uid !== App.currentUser?.uid ? `
@@ -142,7 +142,7 @@ const UIPlanilhas = {
                 class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors
                   ${p2.id === App.currentPlanilhaId ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50 text-gray-700'}">
                 <div class="w-2 h-2 rounded-full flex-shrink-0 ${p2.id === App.currentPlanilhaId ? 'bg-indigo-500' : 'bg-gray-300'}"></div>
-                <span class="text-sm font-medium flex-1 truncate">${p2.name}</span>
+                <span class="text-sm font-medium flex-1 truncate">${_esc(p2.name)}</span>
                 ${p2.id === App.currentPlanilhaId ? '<span class="text-xs text-indigo-500 font-semibold">ativa</span>' : ''}
               </button>
             `).join('')}

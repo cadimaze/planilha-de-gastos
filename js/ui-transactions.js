@@ -101,11 +101,11 @@ const UITransactions = {
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
                   <div class="flex items-center gap-1 flex-wrap">
-                    <p class="text-sm font-medium text-gray-900 truncate">${t.description}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate">${_esc(t.description)}</p>
                     ${instBadge}${recBadge}${cardBadge}${usdBadge}
                   </div>
                   <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
-                  ${t.notes ? `<p class="text-xs text-gray-300 truncate">${t.notes}</p>` : ''}
+                  ${t.notes ? `<p class="text-xs text-gray-300 truncate">${_esc(t.notes)}</p>` : ''}
                 </div>
                 <div class="flex items-center gap-2 ml-2 flex-shrink-0">
                   <p class="text-sm font-bold ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
@@ -173,7 +173,7 @@ const UITransactions = {
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Descrição *</label>
             <input name="description" type="text" required autocomplete="off"
               placeholder="${type==='income' ? 'Ex: Salário, Freelance...' : 'Ex: Supermercado, Conta...'}"
-              value="${tx?.description || ''}"
+              value="${_esc(tx?.description || '')}"
               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -214,7 +214,7 @@ const UITransactions = {
           ${type === 'expense' ? this._cardChipsHTML() : ''}
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Observações</label>
-            <textarea name="notes" rows="2" placeholder="Opcional..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${tx?.notes || ''}</textarea>
+            <textarea name="notes" rows="2" placeholder="Opcional..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${_esc(tx?.notes || '')}</textarea>
           </div>
           <div class="flex gap-3 pt-1">
             <button type="button" onclick="Modal.close()" class="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancelar</button>
@@ -632,7 +632,7 @@ const UITransactions = {
                   ${categoryIcon(r.category, r.type, true)}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-gray-900 truncate">${r.description}</p>
+                  <p class="text-sm font-semibold text-gray-900 truncate">${_esc(r.description)}</p>
                   <p class="text-xs text-gray-400">${r.category} · dia ${r.day || 1}</p>
                 </div>
                 <div class="text-right flex-shrink-0">
@@ -687,7 +687,7 @@ const UITransactions = {
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Descrição *</label>
           <input id="rec-desc" type="text" autocomplete="off"
             placeholder="Ex: Aluguel, Salário, Netflix..."
-            value="${rec?.description || ''}"
+            value="${_esc(rec?.description || '')}"
             class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -734,7 +734,7 @@ const UITransactions = {
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Observações</label>
           <textarea id="rec-notes" rows="2" placeholder="Opcional..."
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${rec?.notes || ''}</textarea>
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${_esc(rec?.notes || '')}</textarea>
         </div>
         <div class="flex gap-3 pt-1">
           <button type="button" onclick="UITransactions.manageRecurrents()"

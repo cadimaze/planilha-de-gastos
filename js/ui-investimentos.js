@@ -110,10 +110,10 @@ const UIInvestimentos = {
                 </div>
                 <div class="ml-3 flex-1 min-w-0">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <p class="text-sm font-medium text-gray-900 truncate">${inv.description || inv.type}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate">${_esc(inv.description || inv.type)}</p>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-semibold ${col.bg} ${col.text} flex-shrink-0">${inv.type}</span>
                   </div>
-                  <p class="text-xs text-gray-400">${Calc.fmtDate(inv.date)}${inv.notes ? ' · ' + inv.notes : ''}</p>
+                  <p class="text-xs text-gray-400">${Calc.fmtDate(inv.date)}${inv.notes ? ' · ' + _esc(inv.notes) : ''}</p>
                 </div>
                 <div class="flex items-center gap-2 ml-2 flex-shrink-0">
                   <p class="text-sm font-bold text-indigo-600">${invAmtDisplay}</p>
@@ -167,7 +167,7 @@ const UIInvestimentos = {
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Descrição</label>
           <input id="inv-description" type="text" autocomplete="off"
             placeholder="Ex: Tesouro IPCA+ 2029, Ação PETR4..."
-            value="${inv?.description || ''}"
+            value="${_esc(inv?.description || '')}"
             class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -202,7 +202,7 @@ const UIInvestimentos = {
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Observações</label>
           <textarea id="inv-notes" rows="2" placeholder="Opcional..."
-            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${inv?.notes || ''}</textarea>
+            class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">${_esc(inv?.notes || '')}</textarea>
         </div>
         <div class="flex gap-3 pt-1">
           <button type="button" onclick="Modal.close()"

@@ -101,7 +101,7 @@ const UIHistory = {
                       ${categoryIcon(t.category, t.type, true)}
                     </div>
                     <div class="ml-2.5 flex-1 min-w-0">
-                      <p class="text-xs font-medium text-gray-800 truncate">${t.description}</p>
+                      <p class="text-xs font-medium text-gray-800 truncate">${_esc(t.description)}</p>
                       <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
                     </div>
                     <p class="text-xs font-bold ml-2 flex-shrink-0 ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
