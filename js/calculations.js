@@ -149,9 +149,18 @@ const Calc = {
 
   faturaAtual(transactions, card) {
     if (card.type !== 'credito') return null;
-    const { from, to } = this.billingPeriod(card);
+    const period = this.billingPeriod(card);
+    const { from, to } = period;
+    const faturaMonth = this.faturaMonthLabel(card, period);
     return transactions
-      .filter(t => t.cardId === card.id && t.type === 'expense' && t.date >= from && t.date <= to)
+      .filter(t => {
+        if (t.cardId !== card.id || t.type !== 'expense') return false;
+        // Saldo importado is saved with the due-date month as its date, so match by fatura month too
+        if (t.description === 'Saldo importado') {
+          return t.date.slice(0, 7) === faturaMonth || (t.date >= from && t.date <= to);
+        }
+        return t.date >= from && t.date <= to;
+      })
       .reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
   },
 
