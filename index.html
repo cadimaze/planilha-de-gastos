@@ -192,71 +192,43 @@
         <!-- Top Bar -->
         <header class="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center gap-2 sticky top-0 z-10 overflow-hidden">
 
-          <!-- Título: só desktop -->
+          <!-- Planilha: só mobile, âncora esquerda -->
+          <button onclick="UIPlanilhas.showManage()" title="Gerenciar planilha"
+            class="lg:hidden flex-shrink-0 p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+          </button>
+
+          <!-- Título: só desktop, lado esquerdo -->
           <div class="hidden lg:block min-w-0 flex-1">
             <h2 id="page-title" class="text-base font-bold text-gray-900">Dashboard</h2>
             <p id="page-subtitle" class="text-xs text-gray-400"></p>
           </div>
 
-          <!-- Controles: push para a direita no desktop, ocupam tudo no mobile -->
-          <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
-
-            <!-- Tema: só mobile -->
-            <button onclick="Theme.toggle()" title="Alternar tema"
-              class="lg:hidden p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-              <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-              </svg>
-              <svg data-theme-icon="sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-              </svg>
-            </button>
-
-            <!-- Planilha: só mobile, só ícone -->
-            <button onclick="UIPlanilhas.showManage()" title="Gerenciar planilha"
-              class="lg:hidden p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-              </svg>
-            </button>
-
-            <!-- Seletor de mês + filtro de dia -->
-            <div id="month-selector-wrap" class="flex items-center gap-1">
-
-              <!-- Navegação por seta: só mobile -->
-              <div class="lg:hidden flex items-center gap-0.5">
-                <button id="month-prev-btn" onclick="App.prevMonth()"
-                  class="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                  </svg>
-                </button>
-                <div class="flex flex-col items-center w-9 leading-tight select-none">
-                  <span id="month-label-month" class="text-xs font-bold text-gray-800">Jan</span>
-                  <span id="month-label-year" class="text-[10px] text-gray-400">2026</span>
-                </div>
-                <button id="month-next-btn" onclick="App.nextMonth()"
-                  class="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Select dropdown: só desktop -->
-              <select id="month-selector" onchange="App.changeMonth(this.value)"
-                class="hidden lg:block text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
-              </select>
-
-              <!-- Filtro de dia: ambos -->
-              <input id="day-filter-input" type="number" min="1" max="31"
-                placeholder="dia"
-                title="Ver saldo até o dia X do mês"
-                oninput="App.setDayFilter(this.value)"
-                class="w-11 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-300"
-                style="-moz-appearance:textfield">
-            </div>
+          <!-- Seletor de mês + filtro de dia: centralizado no mobile, lado direito no desktop -->
+          <div id="month-selector-wrap" class="flex-1 lg:flex-none flex items-center justify-center lg:justify-end gap-1.5">
+            <select id="month-selector" onchange="App.changeMonth(this.value)"
+              class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
+            </select>
+            <input id="day-filter-input" type="number" min="1" max="31"
+              placeholder="dia"
+              title="Ver saldo até o dia X do mês"
+              oninput="App.setDayFilter(this.value)"
+              class="w-11 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-300"
+              style="-moz-appearance:textfield">
           </div>
+
+          <!-- Tema: sempre visível, âncora direita (mobile) / lado direito (desktop) -->
+          <button onclick="Theme.toggle()" title="Alternar tema"
+            class="flex-shrink-0 p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+            <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg data-theme-icon="sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
         </header>
 
         <!-- Page Content -->

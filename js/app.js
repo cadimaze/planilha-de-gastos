@@ -251,22 +251,9 @@ const App = {
     if (inp) inp.value = '';
     Charts.destroyAll();
     this._updateSidebarMonth();
-    this._updateMobileMonthLabel();
     document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
     if (this.currentPage === 'dashboard')    UIDashboard.render(key, null);
     if (this.currentPage === 'transactions') UITransactions.render(key, null);
-  },
-
-  prevMonth() {
-    const months = this._getMonthList();
-    const idx = months.indexOf(this.currentMonth);
-    if (idx > 0) this.changeMonth(months[idx - 1]);
-  },
-
-  nextMonth() {
-    const months = this._getMonthList();
-    const idx = months.indexOf(this.currentMonth);
-    if (idx < months.length - 1) this.changeMonth(months[idx + 1]);
   },
 
   setDayFilter(val) {
@@ -286,7 +273,6 @@ const App = {
       const sel = document.getElementById('month-selector');
       if (sel) sel.value = key;
       this._updateSidebarMonth();
-      this._updateMobileMonthLabel();
       document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
     }
   },
@@ -312,28 +298,13 @@ const App = {
   _buildMonthSelector() {
     const months = this._getMonthList();
     const sel = document.getElementById('month-selector');
-    if (sel) {
-      sel.innerHTML = months.map(m =>
-        `<option value="${m}" ${m === this.currentMonth ? 'selected' : ''}>${Calc.fmtMonthLong(m)}</option>`
-      ).join('');
-    }
-    this._updateMobileMonthLabel();
-  },
-
-  _updateMobileMonthLabel() {
-    const key = this.currentMonth;
-    if (!key) return;
-    const d = new Date(key + '-02');
-    const monthEl = document.getElementById('month-label-month');
-    const yearEl  = document.getElementById('month-label-year');
-    if (monthEl) monthEl.textContent = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-    if (yearEl)  yearEl.textContent  = key.slice(0, 4);
-    const months  = this._getMonthList();
-    const idx     = months.indexOf(key);
-    const prevBtn = document.getElementById('month-prev-btn');
-    const nextBtn = document.getElementById('month-next-btn');
-    if (prevBtn) { prevBtn.disabled = idx <= 0; prevBtn.style.opacity = idx <= 0 ? '0.35' : ''; }
-    if (nextBtn) { nextBtn.disabled = idx >= months.length - 1; nextBtn.style.opacity = idx >= months.length - 1 ? '0.35' : ''; }
+    if (!sel) return;
+    sel.innerHTML = months.map(m => {
+      const d = new Date(m + '-02');
+      const short = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+      const label = short.charAt(0).toUpperCase() + short.slice(1) + ' ' + m.slice(0, 4);
+      return `<option value="${m}" ${m === this.currentMonth ? 'selected' : ''}>${label}</option>`;
+    }).join('');
   },
 
   _updateSidebarMonth() {
