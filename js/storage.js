@@ -88,6 +88,22 @@ const Storage = {
     return batch.commit();
   },
 
+  // ── Assinaturas ───────────────────────────────────────────────────────────
+  _assRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('assinaturas'); },
+  getAssinaturas() { return (typeof App !== 'undefined' && App.assinaturas) || []; },
+
+  async addAssinatura(data) {
+    return this._assRef().add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  },
+
+  async updateAssinatura(id, data) {
+    return this._assRef().doc(id).update(data);
+  },
+
+  async deleteAssinatura(id) {
+    return this._assRef().doc(id).delete();
+  },
+
   // ── Investimentos ─────────────────────────────────────────────────────────
   _invRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('investimentos'); },
   getInvestimentos() { return (typeof App !== 'undefined' && App.investimentos) || []; },

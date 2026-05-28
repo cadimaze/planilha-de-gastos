@@ -11,6 +11,7 @@ const App = {
   recorrentes:       [],
   investimentos:     [],
   cartoes:           [],
+  assinaturas:       [],
 
   _initialized: false,
   _loadCount:   0,
@@ -19,6 +20,7 @@ const App = {
   _unsubRec:    null,
   _unsubInv:    null,
   _unsubCard:   null,
+  _unsubAss:    null,
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   init() {
@@ -90,6 +92,7 @@ const App = {
     if (this._unsubRec)  { this._unsubRec();  this._unsubRec  = null; }
     if (this._unsubInv)  { this._unsubInv();  this._unsubInv  = null; }
     if (this._unsubCard) { this._unsubCard(); this._unsubCard = null; }
+    if (this._unsubAss)  { this._unsubAss();  this._unsubAss  = null; }
 
     this.currentPlanilhaId = planilhaId;
     this.currentPlanilha   = this.planilhas.find(p => p.id === planilhaId) || null;
@@ -189,6 +192,15 @@ const App = {
         });
         if (this._initialized) this.refresh();
       }, err => console.error('cartoes snapshot:', err));
+
+    this._unsubAss = db.collection('planilhas').doc(planilhaId)
+      .collection('assinaturas').onSnapshot(snap => {
+        this.assinaturas = snap.docs.map(doc => {
+          const d = doc.data();
+          return { id: doc.id, name: d.name, category: d.category || 'outros', amount: d.amount, currency: d.currency || 'BRL', active: d.active !== false };
+        });
+        if (this._initialized) this.refresh();
+      }, err => console.error('assinaturas snapshot:', err));
   },
 
   _showApp() {
@@ -208,7 +220,8 @@ const App = {
     if (this._unsubRec)  { this._unsubRec();  this._unsubRec  = null; }
     if (this._unsubInv)  { this._unsubInv();  this._unsubInv  = null; }
     if (this._unsubCard) { this._unsubCard(); this._unsubCard = null; }
-    this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.cartoes = []; this.planilhas = [];
+    if (this._unsubAss)  { this._unsubAss();  this._unsubAss  = null; }
+    this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.cartoes = []; this.assinaturas = []; this.planilhas = [];
     this.currentPlanilha = null; this.currentPlanilhaId = null;
     this._initialized = false; this._loadCount = 0;
     const loading = document.getElementById('loading');
@@ -232,6 +245,7 @@ const App = {
       history:      ['Histórico',          'Todos os meses'],
       investimentos:['Investimentos',      'Controle de aportes'],
       cartoes:      ['Cartões',            'Gerencie seus cartões'],
+      assinaturas:  ['Assinaturas',        'Gerencie suas assinaturas'],
     };
     const [title, subtitle] = meta[page] || ['', ''];
     document.getElementById('page-title').textContent    = title;
@@ -246,6 +260,7 @@ const App = {
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
       case 'cartoes':      UICartoes.render();                       break;
+      case 'assinaturas':  UIAssinaturas.render();                   break;
     }
   },
 
@@ -292,6 +307,7 @@ const App = {
       case 'history':      UIHistory.render();                       break;
       case 'investimentos':UIInvestimentos.render();                 break;
       case 'cartoes':      UICartoes.render();                       break;
+      case 'assinaturas':  UIAssinaturas.render();                   break;
     }
   },
 
