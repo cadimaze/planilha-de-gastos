@@ -40,6 +40,8 @@ const UICartoes = {
             const fatura = Calc.faturaAtual(txAll, card);
             const dias   = Calc.diasAteVencimento(card.dueDay);
             const period = card.type === 'credito' ? Calc.billingPeriod(card) : null;
+            const faturaMonthKey = period ? Calc.faturaMonthLabel(card, period) : null;
+            const faturaMonthStr = faturaMonthKey ? Calc.fmtMonthShort(faturaMonthKey) : null;
             const diasLabel = dias === null ? '' : dias === 0 ? 'Hoje' : dias === 1 ? 'Amanhã' : `${dias} dias`;
             const diasColor = dias !== null && dias <= 3 ? 'text-red-500' : dias !== null && dias <= 7 ? 'text-amber-500' : 'text-gray-400';
             return `
@@ -62,9 +64,9 @@ const UICartoes = {
                 <div class="bg-white px-4 py-3 border border-gray-100 border-t-0 rounded-b-2xl">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-xs text-gray-400 mb-0.5">Fatura atual</p>
+                      <p class="text-xs text-gray-400 mb-0.5">${faturaMonthStr ? `Fatura de ${faturaMonthStr}` : 'Fatura atual'}</p>
                       <p class="text-xl font-bold text-gray-900">${Calc.fmt(fatura || 0)}</p>
-                      ${period ? `<p class="text-xs text-gray-400 mt-0.5">${Calc.fmtDate(period.from)} a ${Calc.fmtDate(period.to)}</p>` : ''}
+                      ${period ? `<p class="text-xs text-gray-400 mt-0.5">Fecha ${Calc.fmtDate(period.to)}</p>` : ''}
                     </div>
                     ${card.dueDay ? `
                     <div class="text-right">
@@ -252,10 +254,20 @@ const UICartoes = {
   _addImportRow() {
     const container = document.getElementById('import-rows');
     if (!container) return;
-    const count = container.querySelectorAll('.import-row').length;
-    const d = new Date();
-    d.setMonth(d.getMonth() + count);
-    const month = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const rows = container.querySelectorAll('.import-row');
+    let month;
+    if (rows.length > 0) {
+      const lastVal = rows[rows.length - 1].querySelector('.import-month')?.value;
+      if (lastVal) {
+        const [y, m] = lastVal.split('-').map(Number);
+        const next = new Date(y, m, 1); // m is 1-indexed so this advances one month
+        month = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+      }
+    }
+    if (!month) {
+      const now = new Date();
+      month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
     const div = document.createElement('div');
     div.className = 'import-row flex items-center gap-2';
     div.innerHTML = `

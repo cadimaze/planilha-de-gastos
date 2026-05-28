@@ -155,6 +155,20 @@ const Calc = {
       .reduce((s, t) => s + this.toBRL(t.amount, t.currency), 0);
   },
 
+  // Returns the monthKey (YYYY-MM) that the fatura belongs to, based on dueDay.
+  // Banks label the fatura by the month the payment is due, not when the cycle closes.
+  faturaMonthLabel(card, period) {
+    const pad = n => String(n).padStart(2, '0');
+    if (!card.dueDay) return period.to.slice(0, 7);
+    const closingDate = new Date(period.to + 'T12:00:00');
+    // If due day is on or before closing day, the due date falls in the next calendar month
+    if (card.dueDay <= closingDate.getDate()) {
+      const next = new Date(closingDate.getFullYear(), closingDate.getMonth() + 1, 1);
+      return `${next.getFullYear()}-${pad(next.getMonth() + 1)}`;
+    }
+    return period.to.slice(0, 7);
+  },
+
   diasAteVencimento(dueDay) {
     if (!dueDay) return null;
     const today = new Date(); today.setHours(0, 0, 0, 0);
