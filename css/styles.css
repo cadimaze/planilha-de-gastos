@@ -102,9 +102,6 @@ canvas { display: block; max-width: 100%; }
 /* ── Mobile horizontal overflow prevention ───────────────────── */
 #page-content { overflow-x: hidden; }
 
-/* Limit month selector width so header fits on narrow screens */
-#month-selector { max-width: 110px; }
-
 /* Prevent flex items from blowing out their containers */
 #page-content > * { max-width: 100%; }
 
