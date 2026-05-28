@@ -88,8 +88,8 @@
   </div>
 
   <!-- Main Layout -->
-  <div id="main-layout" class="hidden h-full">
-    <div class="flex h-full">
+  <div id="main-layout" class="hidden h-full overflow-hidden">
+    <div class="flex h-full overflow-hidden w-full">
 
       <!-- Sidebar (desktop) -->
       <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-100 shadow-sm z-10">
@@ -187,17 +187,17 @@
       </aside>
 
       <!-- Main Content -->
-      <main class="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <main class="flex-1 lg:ml-64 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
 
         <!-- Top Bar -->
-        <header class="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-          <div>
-            <h2 id="page-title" class="text-base font-bold text-gray-900">Dashboard</h2>
-            <p id="page-subtitle" class="text-xs text-gray-400"></p>
+        <header class="bg-white border-b border-gray-100 px-4 lg:px-6 py-3 flex items-center justify-between sticky top-0 z-10 overflow-hidden">
+          <div class="min-w-0 flex-1 mr-2">
+            <h2 id="page-title" class="text-base font-bold text-gray-900 truncate">Dashboard</h2>
+            <p id="page-subtitle" class="text-xs text-gray-400 truncate"></p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 flex-shrink-0">
             <button onclick="Theme.toggle()" title="Alternar tema"
-              class="lg:hidden p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+              class="lg:hidden p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors flex-shrink-0">
               <svg data-theme-icon="moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
               </svg>
@@ -206,28 +206,28 @@
               </svg>
             </button>
             <button onclick="UIPlanilhas.showManage()"
-              class="lg:hidden flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors max-w-[120px]">
+              class="lg:hidden flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors max-w-[80px] flex-shrink-0">
               <svg class="w-3.5 h-3.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
               </svg>
               <span data-planilha-name class="truncate font-medium"></span>
             </button>
-            <div id="month-selector-wrap" class="flex items-center gap-1.5">
+            <div id="month-selector-wrap" class="flex items-center gap-1 flex-shrink-0">
               <select id="month-selector" onchange="App.changeMonth(this.value)"
-                class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer">
+                class="text-xs border border-gray-200 rounded-lg px-1.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer max-w-[105px]">
               </select>
               <input id="day-filter-input" type="number" min="1" max="31"
                 placeholder="dia"
                 title="Ver saldo até o dia X do mês"
                 oninput="App.setDayFilter(this.value)"
-                class="w-14 text-xs text-center border border-gray-200 rounded-lg px-1.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-300"
+                class="w-11 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-300"
                 style="-moz-appearance:textfield">
             </div>
           </div>
         </header>
 
         <!-- Page Content -->
-        <div id="page-content" class="flex-1 p-4 lg:p-6 pb-24 lg:pb-6 overflow-y-auto">
+        <div id="page-content" class="flex-1 p-4 lg:p-6 pb-24 lg:pb-6 overflow-y-auto overflow-x-hidden">
         </div>
       </main>
     </div>
