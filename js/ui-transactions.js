@@ -3,27 +3,61 @@ const UITransactions = {
   search: '',
   _selectedCardId: null,
   _selectedCurrency: 'BRL',
+  _filterCard: null,
+  _filterCategory: null,
 
   INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Vale Alimentação', 'Vale Refeição', 'Outros'],
   EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
 
   // ── Lista ─────────────────────────────────────────────────────────────────
   render(monthKey, dayFilter = null) {
-    const txAll  = Storage.getTransactions();
-    const recAll = Storage.getRecurrentes();
-    const recTx  = Calc.recurrentForMonth(recAll, monthKey, dayFilter);
+    const txAll   = Storage.getTransactions();
+    const recAll  = Storage.getRecurrentes();
+    const recTx   = Calc.recurrentForMonth(recAll, monthKey, dayFilter);
+    const cartoes = Storage.getCartoes();
 
-    let tx = [...Calc.txForMonth(txAll, monthKey, dayFilter), ...recTx]
+    const txAllMonth = [...Calc.txForMonth(txAll, monthKey, dayFilter), ...recTx]
       .sort((a, b) => b.date.localeCompare(a.date));
-    if (this.filter !== 'all') tx = tx.filter(t => t.type === this.filter);
+
+    const incCount = txAllMonth.filter(t => t.type === 'income').length;
+    const expCount = txAllMonth.filter(t => t.type === 'expense').length;
+
+    let txFiltered = [...txAllMonth];
+    if (this.filter !== 'all') txFiltered = txFiltered.filter(t => t.type === this.filter);
     if (this.search) {
       const q = this.search.toLowerCase();
-      tx = tx.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
+      txFiltered = txFiltered.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
     }
-    const allReal  = Calc.txForMonth(txAll, monthKey, dayFilter);
-    const allMerge = [...allReal, ...recTx];
-    const incCount = allMerge.filter(t => t.type === 'income').length;
-    const expCount = allMerge.filter(t => t.type === 'expense').length;
+
+    const usedCardIds = [...new Set(txFiltered.map(t => t.cardId).filter(Boolean))];
+    const usedCards = usedCardIds.map(id => cartoes.find(c => c.id === id)).filter(Boolean);
+
+    const txCardFiltered = this._filterCard
+      ? txFiltered.filter(t => t.cardId === this._filterCard)
+      : txFiltered;
+
+    const uniqueCategories = [...new Set(txCardFiltered.map(t => t.category))].sort();
+
+    const tx = this._filterCategory
+      ? txCardFiltered.filter(t => t.category === this._filterCategory)
+      : txCardFiltered;
+
+    const catTotal = this._filterCategory !== null && tx.length > 0
+      ? tx.reduce((s, t) => s + Calc.toBRL(t.amount, t.currency), 0)
+      : null;
+    const catIsExpense = tx.length > 0 && tx.every(t => t.type === 'expense');
+
+    const cardChipsHTML = usedCards.length > 0 ? `
+        <div class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
+          <button onclick="UITransactions.setCardFilter(null)" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${!this._filterCard ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">Todos</button>
+          ${usedCards.map(c => `<button onclick="UITransactions.setCardFilter('${c.id}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCard === c.id ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}" style="${this._filterCard === c.id ? `background:${c.color||'#374151'};border-color:${c.color||'#374151'}` : ''}">${_esc(c.name)}</button>`).join('')}
+        </div>` : '';
+
+    const catChipsHTML = uniqueCategories.length > 1 ? `
+        <div class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
+          <button onclick="UITransactions.setCategoryFilter(null)" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${!this._filterCategory ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">Todas</button>
+          ${uniqueCategories.map(cat => `<button onclick="UITransactions.setCategoryFilter('${cat.replace(/'/g, "\\'")}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCategory === cat ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">${_esc(cat)}</button>`).join('')}
+        </div>` : '';
 
     document.getElementById('page-content').innerHTML = `
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 mb-4 space-y-3">
@@ -34,11 +68,23 @@ const UITransactions = {
             class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="flex gap-2">
-          <button onclick="UITransactions.setFilter('all')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Todos (${allMerge.length})</button>
+          <button onclick="UITransactions.setFilter('all')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='all' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Todos (${txAllMonth.length})</button>
           <button onclick="UITransactions.setFilter('income')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='income' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Entradas (${incCount})</button>
           <button onclick="UITransactions.setFilter('expense')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='expense' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Saídas (${expCount})</button>
         </div>
+        ${cardChipsHTML}
+        ${catChipsHTML}
       </div>
+
+      ${catTotal !== null ? `
+      <div class="flex items-center justify-between px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-2xl mb-4">
+        <div>
+          <p class="text-xs font-semibold text-indigo-700">${_esc(this._filterCategory)}</p>
+          <p class="text-xs text-indigo-500">${tx.length} lançamento${tx.length !== 1 ? 's' : ''} no mês</p>
+        </div>
+        <p class="text-base font-bold ${catIsExpense ? 'text-red-600' : 'text-green-600'}">${catIsExpense ? '−' : '+'}${Calc.fmt(catTotal)}</p>
+      </div>
+      ` : ''}
 
       <div class="grid grid-cols-2 gap-3 mb-3">
         <button onclick="UITransactions.openForm('income')" class="flex items-center justify-center gap-2 bg-green-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-green-700 active:scale-95 transition-all shadow-sm">
@@ -123,8 +169,22 @@ const UITransactions = {
     `;
   },
 
-  setFilter(f) { this.filter = f; this.render(App.currentMonth, App.currentDayFilter); },
+  setFilter(f) {
+    this.filter = f;
+    this._filterCard = null;
+    this._filterCategory = null;
+    this.render(App.currentMonth, App.currentDayFilter);
+  },
   setSearch(v) { this.search = v; this.render(App.currentMonth, App.currentDayFilter); },
+  setCardFilter(id) {
+    this._filterCard = id || null;
+    this._filterCategory = null;
+    this.render(App.currentMonth, App.currentDayFilter);
+  },
+  setCategoryFilter(cat) {
+    this._filterCategory = cat || null;
+    this.render(App.currentMonth, App.currentDayFilter);
+  },
 
   // ── Formulário ────────────────────────────────────────────────────────────
   openForm(type, editId) {
