@@ -226,7 +226,8 @@ const App = {
       inp.value = this.currentDayFilter;
       inp.style.borderColor = '#f59e0b';
     }
-    UIPrivacy.checkAndShow(() => this.navigateTo('dashboard'));
+    this.navigateTo('dashboard');
+    UIPrivacy.checkAndShow(() => {});
   },
 
   _onLogout() {
@@ -279,6 +280,18 @@ const App = {
     }
   },
 
+  prevMonth() {
+    const months = this._getMonthList();
+    const idx = months.indexOf(this.currentMonth);
+    if (idx > 0) this.changeMonth(months[idx - 1]);
+  },
+
+  nextMonth() {
+    const months = this._getMonthList();
+    const idx = months.indexOf(this.currentMonth);
+    if (idx < months.length - 1) this.changeMonth(months[idx + 1]);
+  },
+
   changeMonth(key) {
     this.currentMonth = key;
     const isCurrentMonth = key === Calc.currentMonthKey();
@@ -292,6 +305,7 @@ const App = {
     }
     Charts.destroyAll();
     this._updateSidebarMonth();
+    this._updateMobileMonthLabel();
     document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
     const df = this.currentDayFilter;
     if (this.currentPage === 'dashboard')    UIDashboard.render(key, df);
@@ -341,13 +355,26 @@ const App = {
   _buildMonthSelector() {
     const months = this._getMonthList();
     const sel = document.getElementById('month-selector');
-    if (!sel) return;
-    sel.innerHTML = months.map(m => {
-      const d = new Date(m + '-02');
+    if (sel) {
+      sel.innerHTML = months.map(m => {
+        const d = new Date(m + '-02');
+        const short = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+        const label = short.charAt(0).toUpperCase() + short.slice(1) + ' ' + m.slice(0, 4);
+        return `<option value="${m}" ${m === this.currentMonth ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+    }
+    this._updateMobileMonthLabel();
+  },
+
+  _updateMobileMonthLabel() {
+    const d = new Date(this.currentMonth + '-02');
+    const monthEl = document.getElementById('month-label-month');
+    const yearEl  = document.getElementById('month-label-year');
+    if (monthEl) {
       const short = d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-      const label = short.charAt(0).toUpperCase() + short.slice(1) + ' ' + m.slice(0, 4);
-      return `<option value="${m}" ${m === this.currentMonth ? 'selected' : ''}>${label}</option>`;
-    }).join('');
+      monthEl.textContent = short.charAt(0).toUpperCase() + short.slice(1);
+    }
+    if (yearEl) yearEl.textContent = this.currentMonth.slice(0, 4);
   },
 
   _updateSidebarMonth() {
