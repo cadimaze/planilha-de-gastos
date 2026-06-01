@@ -217,7 +217,7 @@ const App = {
       inp.value = this.currentDayFilter;
       inp.style.borderColor = '#f59e0b';
     }
-    this.navigateTo('dashboard');
+    UIPrivacy.checkAndShow(() => this.navigateTo('dashboard'));
   },
 
   _onLogout() {
