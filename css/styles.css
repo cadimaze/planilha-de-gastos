@@ -31,6 +31,10 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
 html.dark .nav-btn.active { background-color: #451a03; color: #fde68a; }
 html.dark .nav-btn.active svg { color: #fde68a; }
 html.dark .mobile-nav-btn.active { color: #fcd34d; }
+.drawer-nav-btn.active { background-color: #fef3c7; color: #b45309; font-weight: 600; }
+.drawer-nav-btn.active svg { color: #b45309; }
+html.dark .drawer-nav-btn.active { background-color: #451a03; color: #fde68a; }
+html.dark .drawer-nav-btn.active svg { color: #fde68a; }
 
 /* ── Page enter animation ───────────────────────────────────── */
 @keyframes pageIn {
