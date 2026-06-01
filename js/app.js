@@ -28,6 +28,15 @@ const App = {
       if (user) { this.currentUser = user; this._onLogin(); }
       else       { this.currentUser = null; this._onLogout(); }
     });
+
+    let _hiddenAt = null;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        _hiddenAt = Date.now();
+      } else if (_hiddenAt && Date.now() - _hiddenAt >= 5 * 60 * 1000) {
+        location.reload();
+      }
+    });
   },
 
   // ── Auth ──────────────────────────────────────────────────────────────────
