@@ -251,7 +251,7 @@ const App = {
     this.currentPage = page;
     Charts.destroyAll();
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
-    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+    document.querySelectorAll('.drawer-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
 
     const meta = {
       dashboard:    ['Dashboard',          () => Calc.fmtMonthLong(this.currentMonth)],
@@ -371,6 +371,13 @@ const App = {
       else avatar.classList.add('hidden');
     }
     if (name) name.textContent = user.displayName || user.email;
+    const dAvatar = document.getElementById('drawer-avatar');
+    const dName   = document.getElementById('drawer-username');
+    if (dAvatar) {
+      if (user.photoURL) { dAvatar.src = user.photoURL; dAvatar.classList.remove('hidden'); }
+      else dAvatar.classList.add('hidden');
+    }
+    if (dName) dName.textContent = user.displayName || user.email;
   },
 };
 

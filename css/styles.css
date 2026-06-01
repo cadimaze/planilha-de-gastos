@@ -31,6 +31,10 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
 html.dark .nav-btn.active { background-color: #451a03; color: #fde68a; }
 html.dark .nav-btn.active svg { color: #fde68a; }
 html.dark .mobile-nav-btn.active { color: #fcd34d; }
+.drawer-nav-btn.active { background-color: #fef3c7; color: #b45309; font-weight: 600; }
+.drawer-nav-btn.active svg { color: #b45309; }
+html.dark .drawer-nav-btn.active { background-color: #451a03; color: #fde68a; }
+html.dark .drawer-nav-btn.active svg { color: #fde68a; }
 
 /* ── Page enter animation ───────────────────────────────────── */
 @keyframes pageIn {
@@ -113,7 +117,7 @@ canvas { display: block; max-width: 100%; }
 
 /* Surfaces */
 html.dark body                    { background-color: #0f172a !important; }
-html.dark #loading                { background-color: #0f172a !important; }
+html.dark #loading                { background: linear-gradient(160deg,#1c1007 0%,#2d1a07 40%,#3d2310 100%) !important; }
 html.dark #login-screen           { background: linear-gradient(135deg, #1e1b4b, #0f172a) !important; }
 html.dark .bg-white               { background-color: #1e293b !important; }
 html.dark .bg-gray-50             { background-color: #0f172a !important; }

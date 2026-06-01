@@ -1,5 +1,5 @@
 const UIPrivacy = {
-  _VERSION: 'v2',
+  _VERSION: 'v3',
 
   checkAndShow(onAccepted) {
     const uid = App.currentUser?.uid;
@@ -32,13 +32,11 @@ const UIPrivacy = {
         <div style="text-align:center;margin-bottom:20px">
           <div style="font-size:44px;margin-bottom:10px;line-height:1">🐝</div>
           <h2 style="font-size:19px;font-weight:800;color:${titleC};margin:0 0 10px;letter-spacing:-0.3px">
-            O Hive está crescendo!
+            Grande atualização! 🚀
           </h2>
           <p style="font-size:13.5px;color:${bodyC};line-height:1.6;margin:0">
-            Mais um marco nessa jornada: chegamos à nossa
-            <strong style="color:${titleC}">Política de Privacidade</strong>. 🚀<br>
-            É direta, honesta e leva menos de 2 minutos pra ler.<br>
-            Obrigado por fazer parte do Hive!
+            O Hive ganhou uma <strong style="color:${titleC}">cara nova</strong>! Navegação por menu lateral, filtros por cartão e categoria nas transações, página de assinaturas e Política de Privacidade — tudo isso em uma única atualização.<br><br>
+            Obrigado por fazer parte dessa jornada. Aceite os termos e aproveite! 🐝
           </p>
         </div>
 
@@ -106,7 +104,7 @@ const UIPrivacy = {
 
         <div style="background:${warnBg};border-radius:12px;padding:12px 14px;margin-bottom:20px">
           <p style="font-size:12px;color:${warnC};margin:0;line-height:1.6">
-            Sua conta será desconectada e <strong>nenhum dado será excluído</strong> — você pode voltar e aceitar quando quiser. Para solicitar a exclusão dos seus dados, entre em contato: <strong>cadimabr@gmail.com</strong>
+            Sua conta será desconectada e <strong>nenhum dado será excluído</strong> — você pode voltar e aceitar quando quiser. Para solicitar a exclusão dos seus dados, entre em contato: <strong>cadima.corporativo@gmail.com</strong>
           </p>
         </div>
 
