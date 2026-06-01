@@ -8,8 +8,20 @@ const UIDashboard = {
     const s          = Calc.bankSummary(txAll, monthKey, recAll, dayFilter);
     const wallet     = Calc.walletSummary(txAll, monthKey, recAll, dayFilter);
     const invSummary = Calc.investimentoSummary(invAll);
-    const runningBal = Calc.runningBalance(txAll, monthKey, recAll, invAll, dayFilter);
-    const prevBal    = runningBal - s.balance;
+
+    // Saldo anterior: usa valor persistido se disponível, senão computa inline
+    const saldoAnterior = (App.carteiraSaldo?.mes_ref === monthKey)
+      ? (App.carteiraSaldo.saldo_anterior ?? 0)
+      : (() => {
+          const [y, m] = monthKey.split('-').map(Number);
+          const prevKey = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+          return Calc.runningBalance(txAll, prevKey, recAll, invAll);
+        })();
+    const invMes    = invAll.filter(i => Calc.monthKey(i.date) === monthKey)
+      .reduce((sum, i) => sum + Calc.toBRL(i.amount, i.currency), 0);
+    const runningBal = saldoAnterior + s.balance - invMes;
+    const prevBal    = saldoAnterior;
+
     const catExp   = Calc.categoryTotals(txAll, monthKey, 'expense', recAll, dayFilter).filter(c => !Calc.VA_VR_CATS.includes(c.category));
     const catInc   = Calc.categoryTotals(txAll, monthKey, 'income',  recAll, dayFilter).filter(c => !Calc.VA_VR_CATS.includes(c.category));
     const recent   = [...Calc.summary(txAll, monthKey, recAll, dayFilter).tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
@@ -21,36 +33,55 @@ const UIDashboard = {
     const totalFlow = s.income + s.expenses;
     const incPct = totalFlow > 0 ? Math.round((s.income / totalFlow) * 100) : 0;
     const expPct = totalFlow > 0 ? Math.round((s.expenses / totalFlow) * 100) : 0;
-    const savRate  = s.income > 0 ? Math.round((s.balance / s.income) * 100) : null;
 
     const balColor  = runningBal >= 0 ? 'text-green-600' : 'text-red-600';
     const balBadge  = runningBal >= 0
       ? 'bg-green-50 text-green-700 border border-green-200'
       : 'bg-red-50 text-red-700 border border-red-200';
+    const prevColor = prevBal >= 0 ? 'text-gray-700' : 'text-red-500';
+    const resColor  = s.balance >= 0 ? 'text-green-600' : 'text-red-500';
 
     document.getElementById('page-content').innerHTML = `
-
-      ${UIPWAHint.getCard()}
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
 
-        <!-- Balance -->
+        <!-- Carteira -->
         <div class="col-span-2 lg:col-span-2 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo em conta</p>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${balBadge}">
-              ${runningBal >= 0 ? 'Positivo' : 'Negativo'}
-            </span>
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+              </div>
+              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Carteira</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="App.recalcularCarteira()" title="Recalcular saldo acumulado"
+                class="p-1 text-gray-300 hover:text-amber-500 transition-colors rounded-lg hover:bg-amber-50">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </button>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${balBadge}">
+                ${runningBal >= 0 ? 'Positivo' : 'Negativo'}
+              </span>
+            </div>
           </div>
-          <p class="text-3xl font-bold ${balColor} mb-1">${Calc.fmt(runningBal)}</p>
+          <p class="text-3xl font-bold ${balColor} mb-3">${Calc.fmt(runningBal)}</p>
           ${prevBal !== 0 ? `
-          <div class="flex items-center gap-3 mb-3 text-xs text-gray-400">
-            <span>Meses anteriores: <span class="font-semibold ${prevBal >= 0 ? 'text-green-600' : 'text-red-500'}">${prevBal > 0 ? '+' : ''}${Calc.fmt(prevBal)}</span></span>
-            <span class="text-gray-200">|</span>
-            <span>Neste mês: <span class="font-semibold ${s.balance >= 0 ? 'text-green-600' : 'text-red-500'}">${s.balance > 0 ? '+' : ''}${Calc.fmt(s.balance)}</span></span>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="bg-gray-50 rounded-xl p-2.5">
+              <p class="text-xs text-gray-400 mb-0.5">Saldo anterior</p>
+              <p class="text-sm font-bold ${prevColor}">${prevBal > 0 ? '+' : ''}${Calc.fmt(prevBal)}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-2.5">
+              <p class="text-xs text-gray-400 mb-0.5">Resultado do mês</p>
+              <p class="text-sm font-bold ${resColor}">${s.balance > 0 ? '+' : ''}${Calc.fmt(s.balance)}</p>
+            </div>
           </div>
-          ` : '<div class="mb-3"></div>'}
+          ` : `<p class="text-xs text-gray-400 mb-3">Primeiro mês registrado</p>`}
           <div class="space-y-1.5">
             <div class="flex items-center gap-2">
               <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">

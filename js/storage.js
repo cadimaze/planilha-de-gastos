@@ -184,6 +184,17 @@ const Storage = {
       [`members.${uid}`]: firebase.firestore.FieldValue.delete(),
     });
   },
+
+  // ── Carteira (Saldo Acumulado) ─────────────────────────────────────────────
+  _walletRef() { return db.collection('planilhas').doc(App.currentPlanilhaId).collection('carteira'); },
+
+  async setWalletSaldo(mesRef, saldoAnterior) {
+    return this._walletRef().doc('saldo').set({
+      mes_ref: mesRef,
+      saldo_anterior: saldoAnterior,
+      atualizado_em: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  },
 };
 
 function _genShareCode() {

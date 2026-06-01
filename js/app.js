@@ -12,6 +12,7 @@ const App = {
   investimentos:     [],
   cartoes:           [],
   assinaturas:       [],
+  carteiraSaldo:     null,
 
   _initialized: false,
   _loadCount:   0,
@@ -141,7 +142,7 @@ const App = {
           };
         });
         if (!this._initialized) onLoad();
-        else this.refresh();
+        else { this.carteiraSaldo = null; this.refresh(); }
       }, err => console.error('tx snapshot:', err));
 
     this._unsubPl = db.collection('planilhas').doc(planilhaId)
@@ -179,7 +180,7 @@ const App = {
           };
         });
         if (!this._initialized) onLoad();
-        else this.refresh();
+        else { this.carteiraSaldo = null; this.refresh(); }
       }, err => {
         console.error('recorrentes snapshot:', err);
         if (!this._initialized) onLoad();
@@ -191,7 +192,7 @@ const App = {
           const d = doc.data();
           return { id: doc.id, type: d.type, description: d.description || '', amount: d.amount, date: d.date, notes: d.notes || '', currency: d.currency || 'BRL' };
         });
-        if (this._initialized) this.refresh();
+        if (this._initialized) { this.carteiraSaldo = null; this.refresh(); }
       }, err => console.error('investimentos snapshot:', err));
 
     this._unsubCard = db.collection('planilhas').doc(planilhaId)
@@ -226,6 +227,7 @@ const App = {
       inp.value = this.currentDayFilter;
       inp.style.borderColor = '#f59e0b';
     }
+    this._syncCarteira();
     this.navigateTo('dashboard');
     UIPrivacy.checkAndShow(() => {});
   },
@@ -238,7 +240,7 @@ const App = {
     if (this._unsubCard) { this._unsubCard(); this._unsubCard = null; }
     if (this._unsubAss)  { this._unsubAss();  this._unsubAss  = null; }
     this.transactions = []; this.planned = []; this.recorrentes = []; this.investimentos = []; this.cartoes = []; this.assinaturas = []; this.planilhas = [];
-    this.currentPlanilha = null; this.currentPlanilhaId = null;
+    this.currentPlanilha = null; this.currentPlanilhaId = null; this.carteiraSaldo = null;
     this._initialized = false; this._loadCount = 0;
     const loading = document.getElementById('loading');
     loading.classList.remove('fade-out');
@@ -307,6 +309,7 @@ const App = {
     this._updateSidebarMonth();
     this._updateMobileMonthLabel();
     document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
+    this._syncCarteira();
     const df = this.currentDayFilter;
     if (this.currentPage === 'dashboard')    UIDashboard.render(key, df);
     if (this.currentPage === 'transactions') UITransactions.render(key, df);
@@ -322,6 +325,22 @@ const App = {
     if (this.currentPage === 'transactions') UITransactions.render(this.currentMonth, this.currentDayFilter);
   },
 
+  _syncCarteira() {
+    const key = this.currentMonth;
+    if (!key || !this.currentPlanilhaId) return;
+    const [y, m] = key.split('-').map(Number);
+    const prevKey = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+    const saldoAnterior = Calc.runningBalance(this.transactions, prevKey, this.recorrentes, this.investimentos);
+    this.carteiraSaldo = { mes_ref: key, saldo_anterior: saldoAnterior };
+    Storage.setWalletSaldo(key, saldoAnterior).catch(() => {});
+  },
+
+  recalcularCarteira() {
+    this.carteiraSaldo = null;
+    this._syncCarteira();
+    if (this.currentPage === 'dashboard') UIDashboard.render(this.currentMonth, this.currentDayFilter);
+  },
+
   goToMonth(date) {
     const key = Calc.monthKey(date);
     if (key !== this.currentMonth) {
@@ -335,6 +354,7 @@ const App = {
 
   refresh() {
     this._buildMonthSelector();
+    this._syncCarteira();
     Charts.destroyAll();
     switch (this.currentPage) {
       case 'dashboard':    UIDashboard.render(this.currentMonth, this.currentDayFilter);    break;
