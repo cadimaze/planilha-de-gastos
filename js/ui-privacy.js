@@ -60,8 +60,13 @@ const UIPrivacy = {
         </a>
 
         <button id="privacy-accept-btn"
-          style="width:100%;padding:15px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;box-shadow:0 4px 14px rgba(245,158,11,0.4)">
+          style="width:100%;padding:15px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;box-shadow:0 4px 14px rgba(245,158,11,0.4);margin-bottom:10px">
           Entendido, aceitar! 🐝
+        </button>
+
+        <button id="privacy-reject-btn"
+          style="width:100%;padding:11px;background:transparent;color:${bodyC};border:1.5px solid ${isDark ? '#334155' : '#e5e7eb'};border-radius:14px;font-size:13px;font-weight:500;cursor:pointer">
+          Recusar e sair
         </button>
 
         <p style="text-align:center;font-size:11px;color:${footC};margin-top:10px">
@@ -78,6 +83,12 @@ const UIPrivacy = {
       overlay.style.opacity = '0';
       overlay.style.transition = 'opacity 0.2s ease';
       setTimeout(() => { overlay.remove(); onAccepted(); }, 200);
+    });
+
+    document.getElementById('privacy-reject-btn').addEventListener('click', () => {
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.2s ease';
+      setTimeout(() => { overlay.remove(); auth.signOut(); }, 200);
     });
   },
 };
