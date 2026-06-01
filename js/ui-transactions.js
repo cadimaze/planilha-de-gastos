@@ -48,13 +48,13 @@ const UITransactions = {
     const catIsExpense = tx.length > 0 && tx.every(t => t.type === 'expense');
 
     const cardChipsHTML = usedCards.length > 0 ? `
-        <div class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
+        <div id="chips-card-row" class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
           <button onclick="UITransactions.setCardFilter(null)" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${!this._filterCard ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">Todos</button>
           ${usedCards.map(c => `<button onclick="UITransactions.setCardFilter('${c.id}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCard === c.id ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}" style="${this._filterCard === c.id ? `background:${c.color||'#374151'};border-color:${c.color||'#374151'}` : ''}">${_esc(c.name)}</button>`).join('')}
         </div>` : '';
 
     const catChipsHTML = uniqueCategories.length > 1 ? `
-        <div class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
+        <div id="chips-cat-row" class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
           <button onclick="UITransactions.setCategoryFilter(null)" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${!this._filterCategory ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">Todas</button>
           ${uniqueCategories.map(cat => `<button onclick="UITransactions.setCategoryFilter('${cat.replace(/'/g, "\\'")}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCategory === cat ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">${_esc(cat)}</button>`).join('')}
         </div>` : '';
@@ -175,15 +175,34 @@ const UITransactions = {
     this._filterCategory = null;
     this.render(App.currentMonth, App.currentDayFilter);
   },
-  setSearch(v) { this.search = v; this.render(App.currentMonth, App.currentDayFilter); },
+  setSearch(v) {
+    const scrollY = window.scrollY;
+    this.search = v;
+    this.render(App.currentMonth, App.currentDayFilter);
+    requestAnimationFrame(() => window.scrollTo(0, scrollY));
+  },
   setCardFilter(id) {
+    const scrollY = window.scrollY;
+    const cardScroll = document.getElementById('chips-card-row')?.scrollLeft || 0;
     this._filterCard = id || null;
     this._filterCategory = null;
     this.render(App.currentMonth, App.currentDayFilter);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+      const row = document.getElementById('chips-card-row');
+      if (row && cardScroll) row.scrollLeft = cardScroll;
+    });
   },
   setCategoryFilter(cat) {
+    const scrollY = window.scrollY;
+    const catScroll = document.getElementById('chips-cat-row')?.scrollLeft || 0;
     this._filterCategory = cat || null;
     this.render(App.currentMonth, App.currentDayFilter);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+      const row = document.getElementById('chips-cat-row');
+      if (row && catScroll) row.scrollLeft = catScroll;
+    });
   },
 
   // ── Formulário ────────────────────────────────────────────────────────────

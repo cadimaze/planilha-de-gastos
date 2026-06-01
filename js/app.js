@@ -97,6 +97,7 @@ const App = {
     this.currentPlanilhaId = planilhaId;
     this.currentPlanilha   = this.planilhas.find(p => p.id === planilhaId) || null;
     this.currentMonth      = Calc.currentMonthKey();
+    this.currentDayFilter  = new Date().getDate();
     this._initialized      = false;
     this._loadCount        = 0;
 
@@ -211,6 +212,11 @@ const App = {
     document.getElementById('main-layout').classList.remove('hidden');
     this._buildMonthSelector();
     this._updateSidebarMonth();
+    const inp = document.getElementById('day-filter-input');
+    if (inp && this.currentDayFilter) {
+      inp.value = this.currentDayFilter;
+      inp.style.borderColor = '#f59e0b';
+    }
     this.navigateTo('dashboard');
   },
 
@@ -266,14 +272,21 @@ const App = {
 
   changeMonth(key) {
     this.currentMonth = key;
-    this.currentDayFilter = null;
+    const isCurrentMonth = key === Calc.currentMonthKey();
+    const todayDay = new Date().getDate();
+    this.currentDayFilter = isCurrentMonth ? todayDay : null;
     const inp = document.getElementById('day-filter-input');
-    if (inp) inp.value = '';
+    if (inp) {
+      inp.value = isCurrentMonth ? todayDay : '';
+      inp.style.borderColor = isCurrentMonth ? '#f59e0b' : '';
+      inp.placeholder = isCurrentMonth ? String(todayDay) : 'dia';
+    }
     Charts.destroyAll();
     this._updateSidebarMonth();
     document.getElementById('page-subtitle').textContent = Calc.fmtMonthLong(key);
-    if (this.currentPage === 'dashboard')    UIDashboard.render(key, null);
-    if (this.currentPage === 'transactions') UITransactions.render(key, null);
+    const df = this.currentDayFilter;
+    if (this.currentPage === 'dashboard')    UIDashboard.render(key, df);
+    if (this.currentPage === 'transactions') UITransactions.render(key, df);
   },
 
   setDayFilter(val) {
