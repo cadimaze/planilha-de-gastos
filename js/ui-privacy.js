@@ -1,5 +1,5 @@
 const UIPrivacy = {
-  _VERSION: 'v1',
+  _VERSION: 'v2',
 
   checkAndShow(onAccepted) {
     const uid = App.currentUser?.uid;
@@ -23,9 +23,6 @@ const UIPrivacy = {
     const bg      = isDark ? '#1e293b' : '#ffffff';
     const titleC  = isDark ? '#f1f5f9' : '#111827';
     const bodyC   = isDark ? '#94a3b8' : '#6b7280';
-    const hlBg    = isDark ? '#451a03' : '#fef3c7';
-    const hlText  = isDark ? '#fcd34d' : '#92400e';
-    const hlLi    = isDark ? '#fde68a' : '#78350f';
     const linkC   = isDark ? '#a5b4fc' : '#6366f1';
     const footC   = isDark ? '#475569' : '#9ca3af';
 
@@ -43,15 +40,6 @@ const UIPrivacy = {
             É direta, honesta e leva menos de 2 minutos pra ler.<br>
             Obrigado por fazer parte do Hive!
           </p>
-        </div>
-
-        <div style="background:${hlBg};border-radius:12px;padding:14px 16px;margin-bottom:18px">
-          <p style="font-size:11px;font-weight:700;color:${hlText};margin:0 0 7px;text-transform:uppercase;letter-spacing:0.5px">Resumo rápido</p>
-          <ul style="margin:0;padding:0 0 0 15px;list-style:disc">
-            <li style="font-size:12px;color:${hlLi};margin-bottom:4px">Seus dados ficam só no Firebase — não repassamos nada a ninguém</li>
-            <li style="font-size:12px;color:${hlLi};margin-bottom:4px">Coletamos apenas o e-mail do Google + o que você mesmo insere</li>
-            <li style="font-size:12px;color:${hlLi}">Você pode pedir a exclusão dos seus dados a qualquer hora</li>
-          </ul>
         </div>
 
         <a href="privacy.html" target="_blank" rel="noopener"
