@@ -331,7 +331,7 @@ const UITransactions = {
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Nº de parcelas *</label>
             <input id="inst-count" type="number" min="2" max="120" placeholder="Ex: 12"
-              oninput="UITransactions.buildInstallmentRows()"
+              oninput="UITransactions.buildInstallmentRows(); UITransactions.onInstCountChange();"
               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
@@ -359,12 +359,24 @@ const UITransactions = {
           </div>
 
           <!-- Modo iguais -->
-          <div id="equal-mode">
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
-              <input id="inst-equal-val" type="number" min="0.01" step="0.01" placeholder="Valor por parcela"
-                oninput="UITransactions.updateEqualTotal()"
-                class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <div id="equal-mode" class="grid grid-cols-2 gap-2">
+            <div>
+              <p class="text-xs text-gray-400 mb-1">Por parcela</p>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                <input id="inst-equal-val" type="number" min="0.01" step="0.01" placeholder="0,00"
+                  oninput="UITransactions.onInstValChange()"
+                  class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-1">Total</p>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                <input id="inst-total-input" type="number" min="0.01" step="0.01" placeholder="0,00"
+                  oninput="UITransactions.onInstTotalChange()"
+                  class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
             </div>
           </div>
 
@@ -486,13 +498,14 @@ const UITransactions = {
       eqBtn?.classList.replace('bg-white','bg-gray-900'); eqBtn?.classList.replace('text-gray-600','text-white');
       cuBtn?.classList.replace('bg-gray-900','bg-white'); cuBtn?.classList.replace('text-white','text-gray-600');
       eqDiv?.classList.remove('hidden'); cuDiv?.classList.add('hidden');
+      this.updateEqualTotal();
     } else {
       cuBtn?.classList.replace('bg-white','bg-gray-900'); cuBtn?.classList.replace('text-gray-600','text-white');
       eqBtn?.classList.replace('bg-gray-900','bg-white'); eqBtn?.classList.replace('text-white','text-gray-600');
       cuDiv?.classList.remove('hidden'); eqDiv?.classList.add('hidden');
       this.buildInstallmentRows();
+      this.updateCustomTotal();
     }
-    this.updateEqualTotal();
   },
 
   buildInstallmentRows() {
@@ -521,15 +534,35 @@ const UITransactions = {
   },
 
   updateEqualTotal() {
+    // total-line is only used for custom mode; equal mode shows total inline
+    const line = document.getElementById('inst-total-line');
+    if (line) line.classList.add('hidden');
+  },
+
+  onInstValChange() {
     const n   = parseInt(document.getElementById('inst-count')?.value) || 0;
     const val = parseFloat(document.getElementById('inst-equal-val')?.value) || 0;
-    const line = document.getElementById('inst-total-line');
-    const tot  = document.getElementById('inst-total');
-    if (n >= 2 && val > 0) {
-      if (line) line.classList.remove('hidden');
-      if (tot) tot.textContent = Calc.fmt(n * val);
-    } else {
-      if (line) line.classList.add('hidden');
+    const el  = document.getElementById('inst-total-input');
+    if (el) el.value = (n > 0 && val > 0) ? (n * val).toFixed(2) : '';
+  },
+
+  onInstTotalChange() {
+    const n     = parseInt(document.getElementById('inst-count')?.value) || 0;
+    const total = parseFloat(document.getElementById('inst-total-input')?.value) || 0;
+    const el    = document.getElementById('inst-equal-val');
+    if (el) el.value = (n > 0 && total > 0) ? (total / n).toFixed(2) : '';
+  },
+
+  onInstCountChange() {
+    const n       = parseInt(document.getElementById('inst-count')?.value) || 0;
+    const val     = parseFloat(document.getElementById('inst-equal-val')?.value) || 0;
+    const total   = parseFloat(document.getElementById('inst-total-input')?.value) || 0;
+    const valEl   = document.getElementById('inst-equal-val');
+    const totalEl = document.getElementById('inst-total-input');
+    if (val > 0 && totalEl) {
+      totalEl.value = n > 0 ? (n * val).toFixed(2) : '';
+    } else if (total > 0 && valEl) {
+      valEl.value = n > 0 ? (total / n).toFixed(2) : '';
     }
   },
 
