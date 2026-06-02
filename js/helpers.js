@@ -73,6 +73,14 @@ const Modal = {
   },
 };
 
+// Renders an AdSense unit after innerHTML is set. slot = ad-slot ID from AdSense dashboard.
+function renderAd(containerId, slot) {
+  const container = document.getElementById(containerId);
+  if (!container || !slot) return;
+  container.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7357948087418536" data-ad-slot="${slot}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+  try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+}
+
 const FAB = {
   _open: false,
   _handler: null,

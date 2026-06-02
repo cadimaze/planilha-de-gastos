@@ -116,7 +116,13 @@ const UIHistory = {
           `;
         }).join('')}
       </div>
+
+      <!-- Ad unit -->
+      <div id="ad-history" class="mt-4"></div>
     `;
+
+    // Ads
+    renderAd('ad-history', window.HIVE_AD_SLOT_HISTORY);
 
     if (last6.length > 1) {
       const labels = last6.map(k => Calc.fmtMonthShort(k));

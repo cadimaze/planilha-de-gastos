@@ -307,6 +307,9 @@ const UIDashboard = {
       </div>
       ` : ''}
 
+      <!-- Ad unit -->
+      <div id="ad-dashboard" class="mb-5"></div>
+
       <!-- Recent Transactions -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-50">
@@ -345,6 +348,9 @@ const UIDashboard = {
         `}
       </div>
     `;
+
+    // Ads
+    renderAd('ad-dashboard', window.HIVE_AD_SLOT_DASHBOARD);
 
     // Charts
     if (catExp.length > 0) {
