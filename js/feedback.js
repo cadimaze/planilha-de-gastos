@@ -1,7 +1,10 @@
 const Feedback = {
-  _KEY_TS:    'hive_feedback_ts',     // timestamp da última exibição
-  _KEY_COUNT: 'hive_login_count',     // total de logins
-  _MIN_INTERVAL: 7 * 24 * 60 * 60 * 1000, // mínimo 7 dias entre exibições
+  _KEY_TS:    'hive_feedback_ts',
+  _KEY_COUNT: 'hive_login_count',
+  _MIN_INTERVAL: 7 * 24 * 60 * 60 * 1000,
+  _IDLE_MS:   30 * 1000,   // segundos de inatividade antes de exibir
+  _lastActivity:  0,
+  _trackingReady: false,
   _rating: 0,
 
   EMOJIS: [
@@ -12,7 +15,30 @@ const Feedback = {
     { n: 5, e: '😍', label: 'Excelente' },
   ],
 
+  _setupTracking() {
+    if (this._trackingReady) return;
+    this._trackingReady = true;
+    this._lastActivity  = Date.now();
+    const mark = () => { this._lastActivity = Date.now(); };
+    document.addEventListener('click',      mark, { passive: true });
+    document.addEventListener('keydown',    mark, { passive: true });
+    document.addEventListener('touchstart', mark, { passive: true });
+    document.addEventListener('input',      mark, { passive: true });
+  },
+
+  _isIdle() {
+    // Modal principal aberto (usuário preenchendo formulário)
+    if (!document.getElementById('modal-overlay')?.classList.contains('hidden')) return false;
+    // Qualquer campo com foco (input, textarea, select)
+    const el = document.activeElement;
+    if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return false;
+    // Interagiu nos últimos 30 segundos
+    if (Date.now() - this._lastActivity < this._IDLE_MS) return false;
+    return true;
+  },
+
   schedule() {
+    this._setupTracking();
     const isFirstTimeWithSystem = !localStorage.getItem(this._KEY_COUNT);
 
     // Incrementa contador de logins
@@ -38,9 +64,8 @@ const Feedback = {
   },
 
   _tryShow() {
-    // Não interrompe se outro modal estiver aberto
-    if (!document.getElementById('modal-overlay')?.classList.contains('hidden')) {
-      setTimeout(() => this._tryShow(), 60 * 1000);
+    if (!this._isIdle()) {
+      setTimeout(() => this._tryShow(), 15 * 1000); // verifica novamente em 15 seg
       return;
     }
     this.show();
