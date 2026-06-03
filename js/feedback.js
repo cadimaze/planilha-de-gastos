@@ -1,7 +1,7 @@
 const Feedback = {
-  _KEY:    'hive_feedback_ts',
-  _TTL:    30 * 24 * 60 * 60 * 1000, // reapresenta após 30 dias
-  _DELAY:  3 * 60 * 1000,             // aparece 3 min após login
+  _KEY_TS:    'hive_feedback_ts',     // timestamp da última exibição
+  _KEY_COUNT: 'hive_login_count',     // total de logins
+  _MIN_INTERVAL: 7 * 24 * 60 * 60 * 1000, // mínimo 7 dias entre exibições
   _rating: 0,
 
   EMOJIS: [
@@ -13,9 +13,21 @@ const Feedback = {
   ],
 
   schedule() {
-    const last = parseInt(localStorage.getItem(this._KEY) || '0');
-    if (last && Date.now() - last < this._TTL) return;
-    setTimeout(() => this._tryShow(), this._DELAY);
+    // Incrementa contador de logins
+    const count = parseInt(localStorage.getItem(this._KEY_COUNT) || '0') + 1;
+    localStorage.setItem(this._KEY_COUNT, String(count));
+
+    // Não exibe se foi mostrado nos últimos 7 dias
+    const lastShown = parseInt(localStorage.getItem(this._KEY_TS) || '0');
+    if (lastShown && Date.now() - lastShown < this._MIN_INTERVAL) return;
+
+    if (count === 1) {
+      // Usuário novo: espera 10 min enquanto configura o app
+      setTimeout(() => this._tryShow(), 10 * 60 * 1000);
+    } else if (Math.random() < (1 / 20)) {
+      // Usuário antigo: ~1 a cada 20 logins, aparece após 30 seg
+      setTimeout(() => this._tryShow(), 30 * 1000);
+    }
   },
 
   _tryShow() {
@@ -53,7 +65,7 @@ const Feedback = {
     setTimeout(() => {
       document.getElementById('feedback-overlay')?.classList.add('hidden');
     }, 220);
-    localStorage.setItem(this._KEY, Date.now().toString());
+    localStorage.setItem(this._KEY_TS, Date.now().toString());
   },
 
   _renderContent() {
