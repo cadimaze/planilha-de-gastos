@@ -13,6 +13,8 @@ const Feedback = {
   ],
 
   schedule() {
+    const isFirstTimeWithSystem = !localStorage.getItem(this._KEY_COUNT);
+
     // Incrementa contador de logins
     const count = parseInt(localStorage.getItem(this._KEY_COUNT) || '0') + 1;
     localStorage.setItem(this._KEY_COUNT, String(count));
@@ -21,11 +23,16 @@ const Feedback = {
     const lastShown = parseInt(localStorage.getItem(this._KEY_TS) || '0');
     if (lastShown && Date.now() - lastShown < this._MIN_INTERVAL) return;
 
-    if (count === 1) {
-      // Usuário novo: espera 10 min enquanto configura o app
+    if (isFirstTimeWithSystem) {
+      // Todos os usuários existentes: exibe uma vez após 1 minuto
+      // A partir daqui o sistema novo entra em vigor
+      setTimeout(() => this._tryShow(), 60 * 1000);
+    } else if (count === 1) {
+      // Usuário genuinamente novo (criou conta após o sistema entrar em vigor)
+      // Espera 10 min enquanto configura o app
       setTimeout(() => this._tryShow(), 10 * 60 * 1000);
     } else if (Math.random() < (1 / 20)) {
-      // Usuário antigo: ~1 a cada 20 logins, aparece após 30 seg
+      // Usuário recorrente: ~1 a cada 20 logins
       setTimeout(() => this._tryShow(), 30 * 1000);
     }
   },
