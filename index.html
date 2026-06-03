@@ -63,15 +63,20 @@
 <body class="h-full bg-gray-50 font-sans">
 <div id="app" class="h-full">
 
-  <!-- Login Screen -->
-  <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-amber-50 to-white flex items-center justify-center z-50 p-6">
-    <div class="w-full max-w-sm text-center">
-      <img src="icon.png?v=2" class="w-20 h-20 rounded-3xl mx-auto mb-5 shadow-lg object-cover">
-      <h1 class="font-outfit text-4xl font-bold text-amber-500 mb-1 tracking-widest">HIVE</h1>
-      <p class="text-sm text-gray-500 mb-8">Controle financeiro pessoal</p>
+  <!-- Login Screen / Landing Page -->
+  <div id="login-screen" class="hidden fixed inset-0 overflow-y-auto z-50" style="background:linear-gradient(160deg,#fffbeb 0%,#fef3c7 60%,#fff 100%)">
+
+    <!-- Hero -->
+    <section style="min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 40px;text-align:center">
+      <img src="icon.png?v=2" style="width:80px;height:80px;border-radius:28px;margin-bottom:20px;box-shadow:0 8px 24px rgba(245,158,11,0.28);object-fit:cover">
+      <h1 style="font-family:'Syne','Inter',sans-serif;font-size:clamp(2.2rem,8vw,3.5rem);font-weight:800;letter-spacing:0.18em;color:#d97706;line-height:1;margin-bottom:8px">HIVE</h1>
+      <p style="font-size:1.05rem;color:#6b7280;margin-bottom:6px;font-weight:500">Controle financeiro pessoal</p>
+      <p style="font-size:0.875rem;color:#9ca3af;margin-bottom:36px;max-width:320px;line-height:1.6">Acompanhe entradas, saídas, cartões, investimentos e assinaturas — tudo em um só lugar, sincronizado em tempo real.</p>
       <button id="btn-google-login" onclick="App.signIn()"
-        class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl py-3.5 text-sm font-semibold hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm disabled:opacity-60">
-        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+        style="display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;border:2px solid #e5e7eb;color:#374151;border-radius:18px;padding:14px 28px;font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:border-color .2s,background .2s;width:100%;max-width:320px"
+        onmouseover="this.style.borderColor='#fbbf24';this.style.background='#fffbeb'"
+        onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff'">
+        <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -79,10 +84,108 @@
         </svg>
         Entrar com Google
       </button>
-      <p class="text-xs text-gray-400 mt-4 leading-relaxed">
-        Seus dados ficam salvos na nuvem e sincronizados<br>entre todos os dispositivos em tempo real.
-      </p>
-    </div>
+      <p style="font-size:0.75rem;color:#9ca3af;margin-top:12px">Dados salvos na nuvem · Sincronização em tempo real</p>
+      <!-- scroll hint -->
+      <div style="margin-top:40px;opacity:0.4;animation:bounceY 1.8s infinite">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section style="background:#fff;padding:56px 24px 48px;text-align:center">
+      <h2 style="font-family:'Syne','Inter',sans-serif;font-size:1.6rem;font-weight:800;color:#1f2937;margin-bottom:8px">Tudo que você precisa</h2>
+      <p style="font-size:0.9rem;color:#6b7280;margin-bottom:36px;max-width:400px;margin-left:auto;margin-right:auto">Uma plataforma completa para você ter clareza total das suas finanças pessoais.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:860px;margin:0 auto;text-align:left">
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">📊</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Dashboard</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Visão geral do seu saldo, receitas, despesas e gráficos por categoria — tudo atualizado em tempo real.</p>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">💸</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Transações</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Registre entradas e saídas com categorias, filtros avançados, busca e suporte a transações recorrentes.</p>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">💳</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Cartões de Crédito</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Gerencie faturas, datas de vencimento e ciclos de cobrança de todos os seus cartões.</p>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">📈</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Histórico</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Análise mensal detalhada com gráfico evolutivo dos últimos meses, saldo acumulado e taxa de economia.</p>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">🧮</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Simulador</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Planeje compras grandes e veja o impacto real no seu fluxo de caixa dos próximos meses.</p>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:20px 22px">
+          <div style="font-size:1.6rem;margin-bottom:10px">🔁</div>
+          <h3 style="font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:6px">Assinaturas</h3>
+          <p style="font-size:0.82rem;color:#6b7280;line-height:1.6">Controle streaming, planos, serviços e qualquer recorrência mensal, com totais por categoria.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Como funciona -->
+    <section style="padding:56px 24px 48px;text-align:center;background:#fffbeb">
+      <h2 style="font-family:'Syne','Inter',sans-serif;font-size:1.6rem;font-weight:800;color:#1f2937;margin-bottom:8px">Como funciona</h2>
+      <p style="font-size:0.9rem;color:#6b7280;margin-bottom:40px">Comece em menos de 1 minuto</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:24px;max-width:700px;margin:0 auto">
+
+        <div style="flex:1;min-width:180px;max-width:200px">
+          <div style="width:48px;height:48px;background:#fbbf24;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-weight:800;color:#fff;font-size:1.1rem">1</div>
+          <h4 style="font-size:0.9rem;font-weight:700;color:#1f2937;margin-bottom:6px">Faça login</h4>
+          <p style="font-size:0.8rem;color:#6b7280;line-height:1.6">Entre com sua conta Google. Sem senhas extras para lembrar.</p>
+        </div>
+
+        <div style="flex:1;min-width:180px;max-width:200px">
+          <div style="width:48px;height:48px;background:#fbbf24;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-weight:800;color:#fff;font-size:1.1rem">2</div>
+          <h4 style="font-size:0.9rem;font-weight:700;color:#1f2937;margin-bottom:6px">Adicione transações</h4>
+          <p style="font-size:0.8rem;color:#6b7280;line-height:1.6">Registre entradas e saídas do mês com categoria e descrição.</p>
+        </div>
+
+        <div style="flex:1;min-width:180px;max-width:200px">
+          <div style="width:48px;height:48px;background:#fbbf24;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-weight:800;color:#fff;font-size:1.1rem">3</div>
+          <h4 style="font-size:0.9rem;font-weight:700;color:#1f2937;margin-bottom:6px">Acompanhe tudo</h4>
+          <p style="font-size:0.8rem;color:#6b7280;line-height:1.6">Veja gráficos, histórico e projeções e tome decisões com clareza.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CTA final -->
+    <section style="background:#fff;padding:48px 24px 56px;text-align:center">
+      <h2 style="font-family:'Syne','Inter',sans-serif;font-size:1.4rem;font-weight:800;color:#1f2937;margin-bottom:8px">Pronto para organizar suas finanças?</h2>
+      <p style="font-size:0.88rem;color:#6b7280;margin-bottom:28px">Gratuito, seguro e sem complicação.</p>
+      <button onclick="App.signIn()"
+        style="display:inline-flex;align-items:center;justify-content:center;gap:12px;background:#f59e0b;border:none;color:#fff;border-radius:18px;padding:14px 32px;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,0.35);transition:background .2s"
+        onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+        Começar agora — é grátis
+      </button>
+      <p style="font-size:0.75rem;color:#9ca3af;margin-top:12px">Nenhum cartão de crédito necessário</p>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background:#1f2937;padding:20px 24px;text-align:center">
+      <p style="font-size:0.75rem;color:#6b7280">© 2025 Hive · <a href="privacy.html" style="color:#9ca3af;text-decoration:underline">Política de Privacidade</a></p>
+    </footer>
+
+    <style>
+      @keyframes bounceY {
+        0%,100% { transform: translateY(0); }
+        50%      { transform: translateY(6px); }
+      }
+    </style>
   </div>
 
   <!-- Loading / Splash Screen -->
