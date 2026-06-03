@@ -5,6 +5,7 @@ const UITransactions = {
   _selectedCurrency: 'BRL',
   _filterCard: null,
   _filterCategory: null,
+  _filterDate: null,
 
   VA_CATS: ['Vale Alimentação', 'Alimentação (VA)'],
   VR_CATS: ['Vale Refeição', 'Refeição (VR)'],
@@ -24,28 +25,32 @@ const UITransactions = {
 
     const incCount = txAllMonth.filter(t => t.type === 'income').length;
     const expCount = txAllMonth.filter(t => t.type === 'expense').length;
-    const vaCount  = txAllMonth.filter(t => this.VA_CATS.includes(t.category)).length;
-    const vrCount  = txAllMonth.filter(t => this.VR_CATS.includes(t.category)).length;
 
     let txFiltered = [...txAllMonth];
     if (this.filter === 'income' || this.filter === 'expense') {
       txFiltered = txFiltered.filter(t => t.type === this.filter);
-    } else if (this.filter === 'va') {
-      txFiltered = txFiltered.filter(t => this.VA_CATS.includes(t.category));
-    } else if (this.filter === 'vr') {
-      txFiltered = txFiltered.filter(t => this.VR_CATS.includes(t.category));
     }
     if (this.search) {
       const q = this.search.toLowerCase();
       txFiltered = txFiltered.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
     }
 
+    const vaAvail = txFiltered.some(t => this.VA_CATS.includes(t.category));
+    const vrAvail = txFiltered.some(t => this.VR_CATS.includes(t.category));
+
     const usedCardIds = [...new Set(txFiltered.map(t => t.cardId).filter(Boolean))];
     const usedCards = usedCardIds.map(id => cartoes.find(c => c.id === id)).filter(Boolean);
 
-    const txCardFiltered = this._filterCard
-      ? txFiltered.filter(t => t.cardId === this._filterCard)
-      : txFiltered;
+    let txCardFiltered;
+    if (this._filterCard === '__va__') {
+      txCardFiltered = txFiltered.filter(t => this.VA_CATS.includes(t.category));
+    } else if (this._filterCard === '__vr__') {
+      txCardFiltered = txFiltered.filter(t => this.VR_CATS.includes(t.category));
+    } else if (this._filterCard) {
+      txCardFiltered = txFiltered.filter(t => t.cardId === this._filterCard);
+    } else {
+      txCardFiltered = txFiltered;
+    }
 
     const uniqueCategories = [...new Set(txCardFiltered.map(t => t.category))].sort();
 
@@ -58,9 +63,12 @@ const UITransactions = {
       : null;
     const catIsExpense = tx.length > 0 && tx.every(t => t.type === 'expense');
 
-    const cardChipsHTML = usedCards.length > 0 ? `
+    const showCardRow = usedCards.length > 0 || vaAvail || vrAvail;
+    const cardChipsHTML = showCardRow ? `
         <div id="chips-card-row" class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling:touch">
           <button onclick="UITransactions.setCardFilter(null)" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${!this._filterCard ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}">Todos</button>
+          ${vaAvail ? `<button onclick="UITransactions.setCardFilter('__va__')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCard === '__va__' ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}" style="${this._filterCard === '__va__' ? 'background:#f97316;border-color:#f97316' : ''}">🥗 VA</button>` : ''}
+          ${vrAvail ? `<button onclick="UITransactions.setCardFilter('__vr__')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCard === '__vr__' ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}" style="${this._filterCard === '__vr__' ? 'background:#14b8a6;border-color:#14b8a6' : ''}">🍽️ VR</button>` : ''}
           ${usedCards.map(c => `<button onclick="UITransactions.setCardFilter('${c.id}')" class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${this._filterCard === c.id ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}" style="${this._filterCard === c.id ? `background:${c.color||'#374151'};border-color:${c.color||'#374151'}` : ''}">${_esc(c.name)}</button>`).join('')}
         </div>` : '';
 
@@ -83,19 +91,6 @@ const UITransactions = {
           <button onclick="UITransactions.setFilter('income')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='income' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Entradas (${incCount})</button>
           <button onclick="UITransactions.setFilter('expense')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='expense' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Saídas (${expCount})</button>
         </div>
-        ${vaCount > 0 || vrCount > 0 ? `
-        <div class="flex gap-2">
-          ${vaCount > 0 ? `
-          <button onclick="UITransactions.setFilter('va')"
-            class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='va' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}">
-            🥗 Vale Alimentação (${vaCount})
-          </button>` : ''}
-          ${vrCount > 0 ? `
-          <button onclick="UITransactions.setFilter('vr')"
-            class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='vr' ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-700 hover:bg-teal-100'}">
-            🍽️ Vale Refeição (${vrCount})
-          </button>` : ''}
-        </div>` : ''}
         ${cardChipsHTML}
         ${catChipsHTML}
       </div>
@@ -136,72 +131,97 @@ const UITransactions = {
         </svg>
       </button>
 
+      ${this._filterDate ? `
+      <button onclick="UITransactions.setDateFilter(null)"
+        class="w-full flex items-center gap-2 px-4 py-2.5 mb-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
+        <span>←</span>
+        <span>${Calc.fmtDate(this._filterDate)}</span>
+      </button>` : ''}
+
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        ${tx.length === 0 ? `
-          <div class="py-12 text-center">
-            <div class="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-            </div>
-            <p class="text-sm text-gray-400">Nenhuma transação encontrada</p>
-          </div>
-        ` : `
-          <div class="divide-y divide-gray-50">
-            ${tx.map(t => {
-              const instBadge = t.installmentNumber
-                ? `<span class="text-xs bg-purple-100 text-purple-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">${t.installmentNumber}/${t.totalInstallments}</span>`
-                : '';
-              const recBadge = t.isRecurrent
-                ? `<span class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-md ml-1">↻</span>`
-                : '';
-              const clickHandler = t.isRecurrent
-                ? `UITransactions.openRecurrentForm('${t.recurrentId}')`
-                : `UITransactions.openForm('${t.type}', '${t.id}')`;
-              const txCard = t.cardId ? Storage.getCartoes().find(c => c.id === t.cardId) : null;
-              const cardBadge = txCard
-                ? `<span class="text-xs font-semibold px-1.5 py-0.5 rounded-md ml-1 text-white" style="background:${txCard.color || '#374151'}">${txCard.name}</span>`
-                : '';
-              const usdBadge = t.currency === 'USD'
-                ? `<span class="text-xs bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">US$${(t.amount||0).toFixed(2)}</span>`
-                : '';
-              return `
-              <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
-                   onclick="${clickHandler}">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type==='income' ? 'bg-green-50' : 'bg-red-50'}">
-                  ${categoryIcon(t.category, t.type)}
-                </div>
-                <div class="ml-3 flex-1 min-w-0">
-                  <div class="flex items-center gap-1 flex-wrap">
-                    <p class="text-sm font-medium text-gray-900 truncate">${_esc(t.description)}</p>
-                    ${instBadge}${recBadge}${cardBadge}${usdBadge}
-                  </div>
-                  <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
-                  ${t.notes ? `<p class="text-xs text-gray-300 truncate">${_esc(t.notes)}</p>` : ''}
-                </div>
-                <div class="flex items-center gap-2 ml-2 flex-shrink-0">
-                  <p class="text-sm font-bold ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
-                    ${t.type==='income' ? '+' : '−'}${Calc.fmt(Calc.toBRL(t.amount, t.currency))}
-                  </p>
-                  <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </div>
-              </div>`;
-            }).join('')}
-          </div>
-        `}
+        ${(() => {
+          const txDay = this._filterDate ? tx.filter(t => t.date === this._filterDate) : tx;
+          if (txDay.length === 0) return `
+            <div class="py-12 text-center">
+              <div class="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+              </div>
+              <p class="text-sm text-gray-400">Nenhuma transação encontrada</p>
+            </div>`;
+          if (this._filterDate) {
+            return `<div class="divide-y divide-gray-50">${txDay.map(t => this._txItemHTML(t)).join('')}</div>`;
+          }
+          const groups = {};
+          txDay.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
+          const today = new Date().toISOString().slice(0, 10);
+          return Object.keys(groups).sort().reverse().map(date => {
+            const label = date === today ? `${Calc.fmtDate(date)} · Hoje` : Calc.fmtDate(date);
+            return `
+              <button onclick="UITransactions.setDateFilter('${date}')"
+                class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-indigo-50 border-b border-gray-100 transition-colors group">
+                <span class="text-xs font-bold text-gray-500 group-hover:text-indigo-600 transition-colors">${label}</span>
+                <span class="text-xs text-gray-300 group-hover:text-indigo-400 transition-colors">→</span>
+              </button>
+              <div class="divide-y divide-gray-50">${groups[date].map(t => this._txItemHTML(t)).join('')}</div>`;
+          }).join('');
+        })()}
       </div>
     `;
+  },
+
+  _txItemHTML(t) {
+    const instBadge = t.installmentNumber
+      ? `<span class="text-xs bg-purple-100 text-purple-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">${t.installmentNumber}/${t.totalInstallments}</span>`
+      : '';
+    const recBadge = t.isRecurrent
+      ? `<span class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-md ml-1">↻</span>`
+      : '';
+    const clickHandler = t.isRecurrent
+      ? `UITransactions.openRecurrentForm('${t.recurrentId}')`
+      : `UITransactions.openForm('${t.type}', '${t.id}')`;
+    const txCard = t.cardId ? Storage.getCartoes().find(c => c.id === t.cardId) : null;
+    const cardBadge = txCard
+      ? `<span class="text-xs font-semibold px-1.5 py-0.5 rounded-md ml-1 text-white" style="background:${txCard.color || '#374151'}">${txCard.name}</span>`
+      : '';
+    const usdBadge = t.currency === 'USD'
+      ? `<span class="text-xs bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded-md ml-1">US$${(t.amount||0).toFixed(2)}</span>`
+      : '';
+    return `
+    <div class="flex items-center px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
+         onclick="${clickHandler}">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${t.type==='income' ? 'bg-green-50' : 'bg-red-50'}">
+        ${categoryIcon(t.category, t.type)}
+      </div>
+      <div class="ml-3 flex-1 min-w-0">
+        <div class="flex items-center gap-1 flex-wrap">
+          <p class="text-sm font-medium text-gray-900 truncate">${_esc(t.description)}</p>
+          ${instBadge}${recBadge}${cardBadge}${usdBadge}
+        </div>
+        <p class="text-xs text-gray-400">${t.category} · ${Calc.fmtDate(t.date)}</p>
+        ${t.notes ? `<p class="text-xs text-gray-300 truncate">${_esc(t.notes)}</p>` : ''}
+      </div>
+      <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+        <p class="text-sm font-bold ${t.type==='income' ? 'text-green-600' : 'text-red-600'}">
+          ${t.type==='income' ? '+' : '−'}${Calc.fmt(Calc.toBRL(t.amount, t.currency))}
+        </p>
+        <svg class="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>`;
   },
 
   setFilter(f) {
     this.filter = f;
     this._filterCard = null;
     this._filterCategory = null;
+    this._filterDate = null;
     this.render(App.currentMonth, App.currentDayFilter);
   },
   setSearch(v) {
     const scrollY = window.scrollY;
     this.search = v;
+    this._filterDate = null;
     this.render(App.currentMonth, App.currentDayFilter);
     requestAnimationFrame(() => window.scrollTo(0, scrollY));
   },
@@ -210,6 +230,7 @@ const UITransactions = {
     const cardScroll = document.getElementById('chips-card-row')?.scrollLeft || 0;
     this._filterCard = id || null;
     this._filterCategory = null;
+    this._filterDate = null;
     this.render(App.currentMonth, App.currentDayFilter);
     requestAnimationFrame(() => {
       window.scrollTo(0, scrollY);
@@ -221,12 +242,18 @@ const UITransactions = {
     const scrollY = window.scrollY;
     const catScroll = document.getElementById('chips-cat-row')?.scrollLeft || 0;
     this._filterCategory = cat || null;
+    this._filterDate = null;
     this.render(App.currentMonth, App.currentDayFilter);
     requestAnimationFrame(() => {
       window.scrollTo(0, scrollY);
       const row = document.getElementById('chips-cat-row');
       if (row && catScroll) row.scrollLeft = catScroll;
     });
+  },
+  setDateFilter(date) {
+    this._filterDate = date || null;
+    this.render(App.currentMonth, App.currentDayFilter);
+    if (!date) requestAnimationFrame(() => window.scrollTo(0, 0));
   },
 
   // ── Formulário ────────────────────────────────────────────────────────────
