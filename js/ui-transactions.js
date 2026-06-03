@@ -6,6 +6,9 @@ const UITransactions = {
   _filterCard: null,
   _filterCategory: null,
 
+  VA_CATS: ['Vale Alimentação', 'Alimentação (VA)'],
+  VR_CATS: ['Vale Refeição', 'Refeição (VR)'],
+
   INCOME_CATS:  ['Salário', 'Freelance', 'Investimentos', 'Aluguel Recebido', 'Venda', 'Bônus', 'Reembolso', 'Vale Alimentação', 'Vale Refeição', 'Outros'],
   EXPENSE_CATS: ['Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Educação', 'Entretenimento', 'Vestuário', 'Tecnologia', 'Serviços', 'Lazer', 'Alimentação (VA)', 'Refeição (VR)', 'Outros'],
 
@@ -21,9 +24,17 @@ const UITransactions = {
 
     const incCount = txAllMonth.filter(t => t.type === 'income').length;
     const expCount = txAllMonth.filter(t => t.type === 'expense').length;
+    const vaCount  = txAllMonth.filter(t => this.VA_CATS.includes(t.category)).length;
+    const vrCount  = txAllMonth.filter(t => this.VR_CATS.includes(t.category)).length;
 
     let txFiltered = [...txAllMonth];
-    if (this.filter !== 'all') txFiltered = txFiltered.filter(t => t.type === this.filter);
+    if (this.filter === 'income' || this.filter === 'expense') {
+      txFiltered = txFiltered.filter(t => t.type === this.filter);
+    } else if (this.filter === 'va') {
+      txFiltered = txFiltered.filter(t => this.VA_CATS.includes(t.category));
+    } else if (this.filter === 'vr') {
+      txFiltered = txFiltered.filter(t => this.VR_CATS.includes(t.category));
+    }
     if (this.search) {
       const q = this.search.toLowerCase();
       txFiltered = txFiltered.filter(t => t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
@@ -72,6 +83,19 @@ const UITransactions = {
           <button onclick="UITransactions.setFilter('income')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='income' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Entradas (${incCount})</button>
           <button onclick="UITransactions.setFilter('expense')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='expense' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">Saídas (${expCount})</button>
         </div>
+        ${vaCount > 0 || vrCount > 0 ? `
+        <div class="flex gap-2">
+          ${vaCount > 0 ? `
+          <button onclick="UITransactions.setFilter('va')"
+            class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='va' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}">
+            🥗 Vale Alimentação (${vaCount})
+          </button>` : ''}
+          ${vrCount > 0 ? `
+          <button onclick="UITransactions.setFilter('vr')"
+            class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${this.filter==='vr' ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-700 hover:bg-teal-100'}">
+            🍽️ Vale Refeição (${vrCount})
+          </button>` : ''}
+        </div>` : ''}
         ${cardChipsHTML}
         ${catChipsHTML}
       </div>
