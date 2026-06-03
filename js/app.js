@@ -230,6 +230,7 @@ const App = {
     this._syncCarteira();
     this.navigateTo('dashboard');
     UIPrivacy.checkAndShow(() => {});
+    Feedback.schedule();
   },
 
   _onLogout() {
