@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.tailwindcss.com https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseapp.com wss://*.firebaseio.com https://*.firebaseio.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com; object-src 'none';">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Seed de dados fictícios — Hive</title>
+  <link rel="icon" type="image/png" href="icon.png?v=2">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="min-h-full bg-gray-50 text-gray-900">
+
+  <div class="max-w-2xl mx-auto px-4 py-8 space-y-5">
+
+    <header>
+      <h1 class="text-2xl font-extrabold tracking-tight">Seed de dados fictícios</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Popula uma planilha com dados de teste cobrindo todas as funcionalidades do Hive:
+        transações, parcelamentos, recorrentes, VA/VR, cartões, assinaturas, investimentos e gastos planejados.
+      </p>
+    </header>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-900">
+      <strong class="font-semibold">Ferramenta de teste.</strong>
+      Use só em uma planilha descartável. Todo documento criado aqui recebe a marca
+      <code class="bg-amber-100 px-1 rounded">seedTag: "demo"</code>, e o botão de limpeza remove
+      <em>apenas</em> os documentos com essa marca — dados reais não são tocados.
+    </div>
+
+    <!-- Login -->
+    <section id="sec-login" class="bg-white border border-gray-200 rounded-2xl p-5 hidden">
+      <p class="text-sm text-gray-600 mb-4">Entre com a mesma conta Google que usa no Hive.</p>
+      <button id="btn-login" class="w-full py-3 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors">
+        Entrar com Google
+      </button>
+    </section>
+
+    <!-- Painel -->
+    <section id="sec-panel" class="bg-white border border-gray-200 rounded-2xl p-5 space-y-5 hidden">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-xs text-gray-400">Conectado como</p>
+          <p id="user-email" class="text-sm font-semibold truncate"></p>
+        </div>
+        <button id="btn-logout" class="text-xs text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">Sair</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Planilha de destino</label>
+        <select id="planilha-select" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+        <p id="planilha-hint" class="text-xs text-gray-400 mt-1.5"></p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+          Confirmação — digite o nome exato da planilha
+        </label>
+        <input id="confirm-name" type="text" autocomplete="off" placeholder="Planilha de testes"
+          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button id="btn-seed" disabled
+          class="py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          Popular com dados fictícios
+        </button>
+        <button id="btn-wipe" disabled
+          class="py-3 border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          Remover dados fictícios
+        </button>
+      </div>
+
+      <div>
+        <p class="text-xs font-semibold text-gray-600 mb-1.5">Log</p>
+        <pre id="log" class="bg-gray-900 text-gray-100 text-xs leading-relaxed rounded-xl p-3 h-56 overflow-auto whitespace-pre-wrap">Pronto.</pre>
+      </div>
+
+      <a href="index.html" class="block text-center text-sm text-indigo-600 font-semibold hover:underline">← Voltar para o Hive</a>
+    </section>
+
+    <p class="text-center text-xs text-gray-400">
+      Nada é enviado para fora do Firebase do projeto. A gravação usa a sua própria sessão.
+    </p>
+  </div>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/seed-demo.js"></script>
+</body>
+</html>
